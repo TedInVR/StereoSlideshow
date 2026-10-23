@@ -1,4 +1,4 @@
-STEREO SLIDESHOW — PERMANENT INSTALLATION — v0.22
+STEREO SLIDESHOW — PERMANENT INSTALLATION — v0.23
 
 FIRST INSTALL OR UPDATE
 1. Quit Stereo Slideshow if it is open.
@@ -55,9 +55,10 @@ requires working Python 3.9–3.14 and FFmpeg/FFprobe, as before. Internet is
 needed only when dependencies must be installed. No administrator password
 is requested by this installer.
 
-NEW IN v0.22
-Music modes: Instrumental, Write a song about a topic, Use my lyrics.
-Vocal preferences, song language, returned lyric review/editing and project saving.
-Saved descriptions with Save/update/Remove and seven starter arrangements.
-Topic mode needs ACE-Step's language model; vocal songs support up to ten minutes.
-Existing project saving, output names and ACE-Step runtime fixes are included.
+NEW IN v0.23
+Save Audio As WAV, FLAC or MP3; reload saved takes and external recordings.
+Replace a selected passage, extend an ending or trim to slideshow length.
+Add an instrument over the original recording (requires ACE-Step Base).
+Every edit is a new take; originals and earlier takes are kept.
+Keep exported audio and its companion JSON together to reload lyrics/settings.
+See Help > User guide for detailed steps and model requirements.

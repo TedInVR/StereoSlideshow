@@ -1,3 +1,30 @@
+VERSION 0.23 — SAVED AUDIO TAKES, PASSAGE EDITS AND ACCOMPANIMENT
+
+Saved-take selector; import/reload external audio into a private working copy;
+Save Audio As WAV/FLAC/MP3 with companion lyric/style JSON. Matching-format
+exports copy audio bytes. Earlier takes and source recordings are retained.
+New take metadata includes all style controls; older prompt-only records load.
+
+Separate operations: new recording; selected passage replacement; extension
+with a half-second join; local trim; generated accompaniment layered over the
+original. Source remains fixed across auditions until explicitly changed.
+Repaint uses explicit time masks, then local FFmpeg splicing preserves decoded
+PCM outside the selected interval. Extension pads the source for conditioning,
+requests its new ending, and preserves the earlier audio. Native Lego requires
+and checks the Base model; owned-engine startup selects Base. Generated stem
+is retained separately; volume control and peak-limited mixing keep the source
+performance as an actual audio layer. No claim of lossless AI alteration inside
+an edited region, exact singer retention or guaranteed musical alignment.
+
+Import, export and generation run in cancellable workers. Existing generation,
+preview and acceptance flow remains. AI source/result edits limited to ten
+minutes. Actual Base/Lego, Repaint and continuation model inference still need
+Mac testing; no ACE-Step models are installed in the development environment.
+Validated real-FFmpeg import/export and sidecars, exact PCM preservation outside
+replacement intervals, retained extension prefix, exact trim, layer mix duration,
+source retention, wrong-model rejection, cancellation and Qt workflows. Existing
+vocal, preset, music, project and installer regressions also checked.
+
 VERSION 0.22 — VOCAL SONGS AND SAVED MUSICAL DESCRIPTIONS
 
 Three modes: Instrumental; Write a song about a topic; Use my lyrics.

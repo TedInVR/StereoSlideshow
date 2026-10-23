@@ -3,7 +3,7 @@
 A macOS desktop app for making stereoscopic photo/video slideshows, with
 ordered music tracks, stereo captions, animated photos, titles and fades.
 Exports full side-by-side MP4, red/cyan anaglyph MP4, and an optional
-YouTube compatibility MKV. Version 0.22.
+YouTube compatibility MKV. Version 0.23.
 
 ## Install or update on a Mac
 
@@ -105,3 +105,22 @@ and app updates. Use **Genre → Use description only** for a detailed descripti
 without adding a broad genre. Descriptions mentioning vocals should be used
 with a song mode if singing is wanted. Projects retain the selected text and
 song choices; they do not embed the entire personal saved-description list.
+
+## Keep and edit audio takes
+
+The music window lists previous takes and offers **Save Audio As…** (WAV,
+FLAC or MP3) and **Import / reload audio…**, including external recordings.
+Keep the companion JSON with exported audio to reload its lyrics and style.
+Each edit produces a separate take. The source stays fixed until explicitly
+replaced with the previewed result.
+
+**What to do** offers selected-passage replacement, ending extension to the
+slideshow duration, local trimming, and adding an instrument over the original.
+Repaint results are spliced locally to preserve decoded audio outside the
+selected region. Extensions retain the song except for a half-second join.
+Added instruments use ACE-Step's **acestep-v15-base** Lego task and are mixed
+with the original recording; the separate generated stem is also retained.
+Base may download on first use. A separately running API must have Base loaded
+for instrument generation. AI edits support source/result lengths up to ten
+minutes. Model performance and musical fit need auditioning; model inference
+for these new edit tasks requires testing on the Mac. See Help → User guide.

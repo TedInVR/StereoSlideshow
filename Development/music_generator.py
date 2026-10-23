@@ -92,6 +92,7 @@ class AceClient:
                 if row.get('task_id')!=task:continue
                 if row.get('status')==2:
                     if payload and payload.get('sample_mode'):raise MusicError('ACE-Step could not write or generate this song. Topic mode needs its language model loaded. Check Logs/music_generator_server.log; supplying your own lyrics does not require the lyric-writing model.')
+                    if payload and payload.get('task_type') in ('repaint','lego'):raise MusicError('ACE-Step could not complete this audio edit. Check Logs/music_generator_server.log for model/task support and memory errors. Adding instruments requires the Base model. Your original track is unchanged.')
                     raise MusicError('ACE-Step could not generate this selection. Try a shorter slideshow or check its log.')
                 if row.get('status')==1:
                     result=row.get('result',[])
@@ -142,7 +143,7 @@ def launch_command(folder,port):
 
 class LocalServer:
     def __init__(self):self.process=None;self.log=None
-    def ensure(self,client,folder,logs,cancel,status,need_lm=False):
+    def ensure(self,client,folder,logs,cancel,status,need_lm=False,model=None):
         try:client.health();return
         except MusicError:
             if not folder:raise
@@ -152,6 +153,7 @@ class LocalServer:
         logs.mkdir(parents=True,exist_ok=True);self.log=(logs/'music_generator_server.log').open('ab')
         env=os.environ.copy();env['TOKENIZERS_PARALLELISM']='false'
         if need_lm:env['ACESTEP_INIT_LLM']='true'
+        if model:env['ACESTEP_CONFIG_PATH']=model
         if platform.system()=='Darwin' and platform.machine()=='arm64':env['ACESTEP_LM_BACKEND']='mlx'
         self.process=subprocess.Popen(command,cwd=root,env=env,stdin=subprocess.DEVNULL,stdout=self.log,stderr=subprocess.STDOUT,start_new_session=True)
         deadline=time.monotonic()+900
@@ -223,6 +225,6 @@ def generate_soundtrack(options,seconds,output,cancel,status):
             pending=output.with_name(output.stem+'.partial.wav')
             try:assemble(files,seconds,pending,cancel,repeat=mode=='instrumental');check_cancel(cancel);pending.replace(output)
             finally:pending.unlink(missing_ok=True)
-        output.with_suffix('.json').write_text(json.dumps(dict(prompt=prompt,requested_seconds=seconds,sections=len(lengths),mode=mode,voice=options.get('voice','No preference'),language=options.get('language','English'),topic=options.get('topic','') if mode=='topic' else '',lyrics=(result_info[0].get('lyrics','') if result_info else '') or (options.get('lyrics','') if mode=='lyrics' else ''),engine='ACE-Step 1.5',created=time.strftime('%Y-%m-%d %H:%M:%S')),indent=2))
+        output.with_suffix('.json').write_text(json.dumps(dict(style={key:options.get(key,'') for key in STYLE_KEYS},prompt=prompt,requested_seconds=seconds,sections=len(lengths),mode=mode,voice=options.get('voice','No preference'),language=options.get('language','English'),topic=options.get('topic','') if mode=='topic' else '',lyrics=(result_info[0].get('lyrics','') if result_info else '') or (options.get('lyrics','') if mode=='lyrics' else ''),engine='ACE-Step 1.5',created=time.strftime('%Y-%m-%d %H:%M:%S')),indent=2))
         return str(output)
     finally:server.stop()
