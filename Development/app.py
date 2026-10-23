@@ -104,7 +104,8 @@ class Window(Q.QWidget):
         self.sec=Q.QDoubleSpinBox(); self.sec.setDecimals(3);self.sec.setRange(1/30,86400);self.manual_seconds=saved.get('seconds_v3',5); self.sec.setValue(self.manual_seconds); self.sec.setSuffix(' seconds'); form.addRow('Seconds per photo',self.sec)
         self.end_mode=Q.QComboBox();self.end_mode.addItems(['Visual sequence ends the video','Music playlist ends the video']);self.end_mode.setCurrentIndex(saved.get('end_mode_index',0));form.addRow('End video with',self.end_mode)
         self.fit_music=Q.QCheckBox('Auto-Fit photos to music (seconds per photo)');self.fit_music.setChecked(saved.get('fit_music',False));form.addRow(self.fit_music)
-        self.timing_summary=Q.QLabel('Timing calculator');self.timing_summary.setWordWrap(True);self.timing_summary.setTextFormat(QtCore.Qt.PlainText);self.timing_summary.setSizePolicy(Q.QSizePolicy.Ignored,Q.QSizePolicy.Preferred);form.addRow(self.timing_summary)
+        from ui_controls import TimingSummary
+        self.timing_summary=TimingSummary('Add photos or videos to calculate timing.');form.addRow(self.timing_summary)
         self.animation=Q.QComboBox(); self.animation.addItems(['Zoom and pan','Subtle zoom and pan']); self.animation.setCurrentIndex(1 if saved.get('motion_style')=='Gentle' else 0); form.addRow('Photo animation',self.animation)
         self.drift=Q.QComboBox(); self.drift.addItems(['No pan (zoom only)','Very small','Small']); self.drift.setCurrentIndex(saved.get('drift_choice_v4',1)); form.addRow('Pan distance (subtle mode)',self.drift)
         self.closing=Q.QDoubleSpinBox(); self.closing.setRange(0,30); self.closing.setValue(saved.get('closing_fade',6)); self.closing.setSuffix(' seconds'); form.addRow('Closing fade to black + silence',self.closing)

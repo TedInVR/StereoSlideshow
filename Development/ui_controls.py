@@ -16,3 +16,20 @@ def protect_settings_wheel(root):
     for control in root.findChildren(Q.QComboBox)+root.findChildren(Q.QAbstractSpinBox):
         control.installEventFilter(filter)
     root.settings_wheel_filter=filter
+
+class TimingSummary(Q.QPlainTextEdit):
+    """Give calculation text its own readable, scrollable space on every style."""
+    def __init__(self,text='',parent=None):
+        super().__init__(parent)
+        self.setReadOnly(True);self.setLineWrapMode(Q.QPlainTextEdit.WidgetWidth)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.setAccessibleName('Timing summary')
+        self.setToolTip('Slideshow timing summary. Scroll inside this box if there are more lines; text can be selected and copied.')
+        self.fit_height();self.setPlainText(text)
+    def fit_height(self):self.setFixedHeight(max(160,self.fontMetrics().lineSpacing()*8+18))
+    def setText(self,text):self.setPlainText(text)
+    def text(self):return self.toPlainText()
+    def changeEvent(self,event):
+        super().changeEvent(event)
+        if event.type() in (QtCore.QEvent.FontChange,QtCore.QEvent.StyleChange):self.fit_height()

@@ -1,3 +1,14 @@
+VERSION 0.19 — READABLE TIMING SUMMARY
+
+Replaced the clipped multiline timing label with a read-only text box below
+Auto-Fit. It reserves eight lines of space, adapts its height to font changes,
+wraps long lines and provides a vertical scrollbar for additional content.
+Timing calculations remain unchanged; text can be selected and copied.
+
+Validation: multiple window sizes and font sizes, retained calculation text,
+wheel scrolling of overflow and access to the final line; playlist and music
+UI regressions; installer verification. Native Mac appearance needs confirmation.
+
 VERSION 0.18 — MUSIC GENERATION INSIDE STEREO SLIDESHOW
 
 Create music to fit this slideshow in main Music step and Guided Walkthrough.
