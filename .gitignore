@@ -9,3 +9,6 @@ __pycache__/
 Stereo Slideshows/
 .venv/
 Generated Music/
+
+* StereoSlideshow Project*/
+*.stereoslideshow

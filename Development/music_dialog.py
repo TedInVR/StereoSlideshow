@@ -21,6 +21,8 @@ class MusicDialog(Q.QDialog):
         self.settings_path=ROOT/'Settings/music_generator.json'
         try:saved=json.loads(self.settings_path.read_text())
         except (OSError,ValueError):saved={}
+        self.style_owner=getattr(parent,'main',parent)
+        saved.update(getattr(self.style_owner,'project_music_style',{}))
         outer=Q.QVBoxLayout(self);scroll=Q.QScrollArea();scroll.setWidgetResizable(True);panel=Q.QWidget();layout=Q.QVBoxLayout(panel);scroll.setWidget(panel);outer.addWidget(scroll,1)
         title=Q.QLabel('Create an original instrumental soundtrack');title.setStyleSheet('font-size:18px;font-weight:600');title.setWordWrap(True);layout.addWidget(title)
         label=Q.QLabel('Length: '+format_time(seconds)+'\nIncludes all photos and full video clips, the opening, closing fade and final black screen.');label.setWordWrap(True);layout.addWidget(label)
@@ -55,6 +57,10 @@ class MusicDialog(Q.QDialog):
             from music_generator import local_url
             local_url(options['url']);self.settings_path.parent.mkdir(parents=True,exist_ok=True);self.settings_path.write_text(json.dumps({k:v for k,v in options.items() if k!='logs'},indent=2))
         except Exception as error:self.status.setText(str(error)[:400]);return
+        style={key:options[key] for key in ['era','genre','mood','details']}
+        if self.style_owner is not None and hasattr(self.style_owner,'project_music_style'):
+            if self.style_owner.project_music_style!=style:
+                self.style_owner.project_music_style=style;self.style_owner.project_changed()
         # Keep every auditioned result: regenerating never overwrites an earlier take.
         output=ROOT/'Generated Music'/('Slideshow Music '+uuid.uuid4().hex[:12]+'.wav')
         self.worker=MusicWorker(options,self.seconds,output,self);self.worker.message.connect(self.status.setText);self.worker.done.connect(self.generated);self.worker.failed.connect(self.failed);self.worker.finished.connect(self.idle)

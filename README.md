@@ -3,7 +3,7 @@
 A macOS desktop app for making stereoscopic photo/video slideshows, with
 ordered music tracks, stereo captions, animated photos, titles and fades.
 Exports full side-by-side MP4, red/cyan anaglyph MP4, and an optional
-YouTube compatibility MKV. Version 0.20.
+YouTube compatibility MKV. Version 0.21.
 
 ## Install or update on a Mac
 
@@ -68,3 +68,22 @@ Integration tests use a local simulated ACE-Step API and real FFmpeg. Actual
 model inference and Apple Silicon startup still need validation on a Mac.
 
 Project source and future updates: https://github.com/TedInVR/StereoSlideshow
+
+## Save a resumable project
+
+Use **File → Save Project** (Command–S). A project folder beside the first visual
+source (music fallback) contains a `.stereoslideshow` file and copies of the
+imported media. Settings, order, captions and clip sound choices are saved.
+**Open Project** (Command–Option–O) resumes from it; move the whole folder to
+keep it portable. **Save Project As** (Command–Shift–S) creates a separate bundle.
+Media copying uses background progress/cancellation and can require significant
+space. Failed/cancelled saves keep the previous saved project file intact.
+
+## Output filenames
+
+`TITLE_StereoSlideshow_Full_SBS_3D_1080p_4min03sec.mp4`
+
+Uses the title (or an eight-digit random prefix), chosen resolution and final
+duration, rounded to seconds. Exact minutes use `4min`; under a minute uses
+`44sec`. Anaglyph and optional compatibility MKV have distinct format tags.
+Existing matching exports get a numbered title suffix instead of being replaced.

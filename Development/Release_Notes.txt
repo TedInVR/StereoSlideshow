@@ -1,3 +1,29 @@
+VERSION 0.21 — PORTABLE PROJECTS AND DESCRIPTIVE EXPORT NAMES
+
+File menu: Save Project, Save Project As, Open Project. Default bundle location
+beside the first imported visual item (music fallback); named folder contains
+relative-path .stereoslideshow JSON and copied Media. Retains order, repeated
+music tracks, clip sound, captions including blanks, title, colors, timing,
+stereo/animation/output controls, and music style choices. Original media is
+untouched. Background copying, byte progress and cancellation; atomic project
+commit; incremental reuse; collision-safe media names. Saved-project dirty
+tracking and Save/Discard/Cancel on closing or opening another project.
+File-open/drag handling and Mac document type registered for projects.
+
+Outputs use TITLE_StereoSlideshow_Full_SBS_3D_1080p_4min03sec.mp4, with an
+8-digit random prefix when untitled. Uses the actual final timeline, including
+music-end decoding adjustments, rounded to the nearest second. Anaglyph and
+YouTube MKV use distinct matching tags. Existing exports are retained with a
+numbered title suffix. Stereo metadata and image rendering are unchanged.
+
+Validated: project roundtrip after moving bundle/removing original sources;
+UI settings restoration, blank captions, clip mute, repeated music, duplicate
+filenames, source reuse, cancellation/failure preservation and invalid paths;
+async UI save, dirty/Cancel behavior; filename duration/resolution/title rules
+and collision preservation; actual SBS/anaglyph rendering, ordered audio,
+whole-playlist loops and endpoint timing; existing UI/shortcut/wheel checks.
+Mac-native document association requires confirmation on a Mac.
+
 VERSION 0.20 — ACE-STEP PORTABLE PYTHON DETECTION
 
 Recognizes both python_embeded and python_embedded portable runtime folders,

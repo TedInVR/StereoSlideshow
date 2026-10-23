@@ -258,7 +258,6 @@ def render(images,audio,out,cfg,progress,cancel):
         return canvas
     title=title_image(cfg['title'],w,h,cfg['text_color']) if cfg['title'].strip() else None
     out=Path(out); out.mkdir(parents=True,exist_ok=True)
-    stem='Slideshow_'+__import__('datetime').datetime.now().strftime('%Y%m%d_%H%M%S')
     results=[]
     with tempfile.TemporaryDirectory(prefix='stereo-slideshow-') as td:
         soundtrack=playlist[0] if playlist else None
@@ -365,16 +364,18 @@ def render(images,audio,out,cfg,progress,cancel):
             filters.append(''.join(labels)+f'amix=inputs={len(labels)}:duration=longest:normalize=0,alimiter=limit=0.95:latency=1,apad,atrim=duration={total}'+end_fade+'[sound]')
             run(acmd+['-filter_complex',';'.join(filters),'-map','0:v:0','-map','[sound]','-c:v','copy','-c:a','aac','-b:a','192k','-t',str(total),'-movflags','+faststart',str(with_music)],cancel)
             master=with_music
+        from output_names import export_paths
+        targets=export_paths(out,cfg.get('title',''),h,total)
         if cfg['sbs']:
             progress(87,'Saving undistorted full-SBS video')
-            dest=out/(stem+'_FullSBS.mp4')
+            dest=targets['sbs']
             shutil.copyfile(master,dest); results.append(str(dest))
         if cfg.get('youtube',False):
-            progress(88,'Applying YouTube metadata'); dest=out/(stem+'_YT3D_16x9.mkv'); part=Path(td)/'tagged.mkv'
+            progress(88,'Applying YouTube metadata'); dest=targets['youtube']; part=Path(td)/'tagged.mkv'
             run([ff,'-y','-i',str(master),'-c','copy','-aspect',cfg.get('eye_aspect','16:9'),'-metadata:s:v:0','stereo_mode=1',str(part)],cancel)
             shutil.copyfile(part,dest); results.append(str(dest))
         if cfg['anaglyph']:
-            progress(92,'Creating Dubois red/cyan anaglyph'); part=Path(td)/'anaglyph.mp4'; dest=out/(stem+'_Anaglyph.mp4')
+            progress(92,'Creating Dubois red/cyan anaglyph'); part=Path(td)/'anaglyph.mp4'; dest=targets['anaglyph']
             run([ff,'-y','-i',str(master),'-vf','stereo3d=sbsl:arcd,setsar=1','-c:v','libx264','-preset','veryfast','-crf','18','-pix_fmt','yuv420p','-c:a','copy','-movflags','+faststart',str(part)],cancel)
             shutil.copyfile(part,dest); results.append(str(dest))
     progress(100,'Finished'); return results

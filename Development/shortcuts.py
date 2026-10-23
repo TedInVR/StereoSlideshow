@@ -1,7 +1,7 @@
 """Persistent, window-scoped keyboard shortcuts."""
 import json, weakref
 from PySide6 import QtCore, QtGui, QtWidgets as Q
-ACTIONS={'add':('Add content','Ctrl+O'),'music':('Add music','Ctrl+Shift+O'),'organize':('Expand lists','Ctrl+E'),'captions':('Edit captions','Ctrl+Shift+C'),'render':('Create slideshow','Ctrl+Return'),'guide':('User guide','F1'),'walkthrough':('Guided walkthrough','Ctrl+Shift+G'),'close':('Close current window / save organizer changes','Ctrl+W')}
+ACTIONS={'save_project':('Save Project','Ctrl+S'),'save_project_as':('Save Project As','Ctrl+Shift+S'),'open_project':('Open Project','Ctrl+Alt+O'),'add':('Add content','Ctrl+O'),'music':('Add music','Ctrl+Shift+O'),'organize':('Expand lists','Ctrl+E'),'captions':('Edit captions','Ctrl+Shift+C'),'render':('Create slideshow','Ctrl+Return'),'guide':('User guide','F1'),'walkthrough':('Guided walkthrough','Ctrl+Shift+G'),'close':('Close current window / save organizer changes','Ctrl+W')}
 class ShortcutManager:
     def __init__(self,path):
         self.path=path;self.bindings=[]

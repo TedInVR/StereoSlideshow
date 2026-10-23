@@ -1,4 +1,4 @@
-STEREO SLIDESHOW — PERMANENT INSTALLATION — v0.20
+STEREO SLIDESHOW — PERMANENT INSTALLATION — v0.21
 
 FIRST INSTALL OR UPDATE
 1. Quit Stereo Slideshow if it is open.
@@ -55,7 +55,9 @@ requires working Python 3.9–3.14 and FFmpeg/FFprobe, as before. Internet is
 needed only when dependencies must be installed. No administrator password
 is requested by this installer.
 
-NEW IN v0.20
-Recognizes ACE-Step's python_embeded portable runtime and skips broken copied
-.venv links. Select your ACE-Step folder in Applications and retry generation.
-The readable timing summary and music generator from previous updates remain.
+NEW IN v0.21
+File > Save Project creates a portable project folder beside your source media.
+File > Open Project resumes it; Save Project As creates a separate bundle.
+Includes media copies, ordering, captions, clip sound and slideshow settings.
+Exports now use title, format, resolution and finished duration in filenames.
+All earlier music-generation and readability fixes are included.

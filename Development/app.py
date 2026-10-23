@@ -57,7 +57,8 @@ class CaptionEditor(Q.QDialog):
             Q.QMessageBox.information(self,'Caption too long','Please keep each caption to 400 characters or fewer.');return
         self.accept()
 
-class Window(Q.QWidget):
+from project_ui import ProjectMixin
+class Window(ProjectMixin,Q.QWidget):
     durations_changed=QtCore.Signal()
     def __init__(self):
         super().__init__(); self.setWindowTitle('Stereo Slideshow — v'+VERSION); self.resize(1180,850); self.setAcceptDrops(True); self.worker=None
@@ -66,6 +67,7 @@ class Window(Q.QWidget):
         self.muted_paths=set(saved.get('muted_videos',[])); self.captions=saved.get('captions',{}); self.caption_front=saved.get('caption_front',True)
         layout=Q.QVBoxLayout(self)
         self.menu=Q.QMenuBar(self);self.menu.setNativeMenuBar(True);layout.setMenuBar(self.menu)
+        file_menu=self.menu.addMenu('File')
         help_menu=self.menu.addMenu('Help')
         folder_action=help_menu.addAction('Open Stereo Slideshow Folder');folder_action.triggered.connect(lambda:QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(ROOT))))
         guide_action=help_menu.addAction('User Guide…');guide_action.triggered.connect(self.show_guide)
@@ -160,6 +162,7 @@ class Window(Q.QWidget):
         self.animation.currentIndexChanged.connect(self.describe_animation);self.describe_animation()
         from ui_controls import protect_settings_wheel
         protect_settings_wheel(self)
+        self.setup_projects(file_menu)
     def describe_animation(self):
         subtle=self.animation.currentIndex()==1
         self.animation_help.setText('Keeps the whole photo visible, with a 2% zoom change and very small horizontal, vertical or diagonal movement. Pan distance controls how far it moves.' if subtle else 'Alternates close-up zooms with left/right and up/down movement. Close-up zooms crop the top and bottom; side-moving photos are shown large. The pan-distance setting applies only to Subtle zoom and pan.')
@@ -183,7 +186,7 @@ class Window(Q.QWidget):
         wizard=Walkthrough(self,CaptionEditor)
         result=wizard.exec();wizard.cleanup()
         if result==Q.QDialog.Accepted:
-            wizard.apply();self.begin()
+            wizard.apply();self.project_changed();self.begin()
     def edit_captions(self):
         if self.worker and self.worker.isRunning():
             Q.QMessageBox.information(self,'Rendering','Wait for rendering to finish before editing captions.');return
@@ -196,7 +199,7 @@ class Window(Q.QWidget):
             try:settings=json.loads(SETTINGS.read_text())
             except Exception:settings={}
             settings.update(captions=self.captions,caption_front=self.caption_front)
-            SETTINGS.parent.mkdir(parents=True,exist_ok=True);SETTINGS.write_text(json.dumps(settings,indent=2))
+            SETTINGS.parent.mkdir(parents=True,exist_ok=True);SETTINGS.write_text(json.dumps(settings,indent=2));self.project_changed()
     def clip_sound(self,checked):
         if checked: self.video_sound.setChecked(True)
         for i in range(self.files.count()):
@@ -301,6 +304,7 @@ class Window(Q.QWidget):
         if c.isValid():
             if title: self.fg=c.name(); self.fgbutton.setText(self.fg)
             else: self.bg=c.name(); self.bgbutton.setText(self.bg)
+            self.project_changed()
     def folder(self):
         p=Q.QFileDialog.getExistingDirectory(self,'Output folder',self.out.text())
         if p: self.source.setChecked(False); self.out.setText(p)
@@ -308,6 +312,7 @@ class Window(Q.QWidget):
     def remove(self):
         for item in self.files.selectedItems(): self.files.takeItem(self.files.row(item))
     def add(self,paths):
+        if len(paths)==1 and Path(paths[0]).suffix.lower()=='.stereoslideshow':self.open_project(paths[0]);return
         if self.worker and self.worker.isRunning(): return
         existing={item_path(self.files.item(i)) for i in range(self.files.count())}; unsupported=[]
         for p in sorted(paths,key=lambda x:x.lower()):
@@ -326,6 +331,7 @@ class Window(Q.QWidget):
         if e.mimeData().hasUrls(): e.acceptProposedAction()
     def dropEvent(self,e): self.add([u.toLocalFile() for u in e.mimeData().urls()]); e.acceptProposedAction()
     def begin(self):
+        if self.project_worker is not None and self.project_worker.isRunning():return
         if self.worker and self.worker.isRunning(): return
         if not self.files.count(): Q.QMessageBox.information(self,'Add photos','Drop some SBS photos or video clips first.'); return
         if not(self.sbs.isChecked() or self.ana.isChecked() or self.yt.isChecked()): Q.QMessageBox.information(self,'Choose output','Select at least one output format.'); return
@@ -377,6 +383,10 @@ class Window(Q.QWidget):
         dialog.exec()
 
     def closeEvent(self,e):
+        if self.worker and self.worker.isRunning():self.cancel();e.ignore();return
+        if self.project_worker is not None and self.project_worker.isRunning():
+            self.project_worker.cancel.set();e.ignore();return
+        if not self.project_can_replace(self.close):e.ignore();return
         if self.worker and self.worker.isRunning(): self.cancel(); e.ignore()
         else:
             if self.probe is not None and self.probe.isRunning():
