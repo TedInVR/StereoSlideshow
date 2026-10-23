@@ -59,6 +59,7 @@ class Walkthrough(Q.QWizard):
         b=Q.QPushButton('Choose music…');b.clicked.connect(self.pick_music);row.addWidget(b)
         b=Q.QPushButton('No music');b.clicked.connect(self.playlist.clear);row.addWidget(b)
         b=Q.QPushButton('Remove selected');b.clicked.connect(lambda:remove_selected(self.playlist));row.addWidget(b)
+        b=Q.QPushButton('Create music to fit this slideshow…');b.clicked.connect(self.create_music);body.addRow(b)
         self.clone_check(body,'source','Save beside first source item in a Stereo Slideshows subfolder')
         self.output=Q.QLineEdit(main.out.text());body.addRow('Other output folder',self.output)
         self.controls['source'].toggled.connect(lambda checked:self.output.setEnabled(not checked));self.output.setEnabled(not self.controls['source'].isChecked())
@@ -128,6 +129,17 @@ class Walkthrough(Q.QWizard):
     def edit_captions(self):
         dialog=self.caption_editor([path_of(self.media.item(i)) for i in range(self.media.count())],self.captions,self.caption_front,self)
         if dialog.exec()==Q.QDialog.Accepted:self.captions=dialog.captions;self.caption_front=dialog.front.isChecked()
+    def create_music(self):
+        paths=[path_of(self.media.item(i)) for i in range(self.media.count())]
+        if not paths:self.message('Add photos and videos first.');return
+        cfg=self.timing_config();cfg.update(end_mode='visuals',fit_music=False)
+        plan,message=self.main.preview_for(paths,[],cfg)
+        if plan is None:self.message(message);return
+        from music_dialog import MusicDialog
+        dialog=MusicDialog(plan['total']/plan['fps'],self)
+        if dialog.exec()==Q.QDialog.Accepted:
+            self.controls['end_mode'].setCurrentIndex(0);self.controls['fit_music'].setChecked(False);self.controls['sec'].setValue(cfg['seconds'])
+            self.playlist.clear();self.playlist.addItem(audio_item(dialog.result_path));self.main.queue_probe([dialog.result_path])
     def pick_music(self):
         files=Q.QFileDialog.getOpenFileNames(self,'Choose music tracks')[0]
         for path in files:self.playlist.addItem(audio_item(path,self.main.duration(path)))

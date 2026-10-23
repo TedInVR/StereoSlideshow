@@ -98,6 +98,7 @@ class Window(Q.QWidget):
         row=Q.QHBoxLayout();groups['music'].addRow(row)
         for text,fn in [('Add music…',self.pick_music),('Remove selected music',self.remove_music),('Clear music',self.clear_music)]:
             button=Q.QPushButton(text);button.clicked.connect(fn);row.addWidget(button)
+        create_music=Q.QPushButton('Create music to fit this slideshow…');create_music.clicked.connect(self.create_music);groups['music'].addRow(create_music)
         form=Q.QFormLayout()
         self.title=Q.QLineEdit(saved.get('title','')); form.addRow('Opening title (optional)',self.title)
         self.sec=Q.QDoubleSpinBox(); self.sec.setDecimals(3);self.sec.setRange(1/30,86400);self.manual_seconds=saved.get('seconds_v3',5); self.sec.setValue(self.manual_seconds); self.sec.setSuffix(' seconds'); form.addRow('Seconds per photo',self.sec)
@@ -214,6 +215,19 @@ class Window(Q.QWidget):
             if d is None or d<0:ready=False
             else:total+=d
         self.music.setText('Music: none' if not playlist else f'Music playlist: {len(playlist)} track(s) — '+(format_time(total) if ready else 'reading durations…'))
+    def create_music(self):
+        if self.worker and self.worker.isRunning():Q.QMessageBox.information(self,'Rendering','Finish or cancel rendering before generating music.');return
+        if not self.files.count():Q.QMessageBox.information(self,'Add content first','Add photos and video clips, then choose their display time before creating music.');return
+        cfg=self.timing_config();cfg.update(end_mode='visuals',fit_music=False)
+        paths=[item_path(self.files.item(i)) for i in range(self.files.count())]
+        plan,message=self.preview_for(paths,[],cfg)
+        if plan is None:Q.QMessageBox.information(self,'Slideshow timing',message);return
+        from music_dialog import MusicDialog
+        dialog=MusicDialog(plan['total']/plan['fps'],self)
+        if dialog.exec()==Q.QDialog.Accepted:
+            self.end_mode.setCurrentIndex(0);self.fit_music.setChecked(False);self.sec.setValue(cfg['seconds'])
+            self.set_playlist([dialog.result_path]);self.schedule_timing()
+            self.status.setText('Generated music added. The slideshow uses the photo timing from your music request. If you change the timeline, generate a new soundtrack to match it.')
     def pick_music(self):
         self.set_playlist(self.playlist()+Q.QFileDialog.getOpenFileNames(self,'Add music tracks')[0])
     def remove_music(self):

@@ -3,7 +3,7 @@
 A macOS desktop app for making stereoscopic photo/video slideshows, with
 ordered music tracks, stereo captions, animated photos, titles and fades.
 Exports full side-by-side MP4, red/cyan anaglyph MP4, and an optional
-YouTube compatibility MKV. Version 0.17.
+YouTube compatibility MKV. Version 0.18.
 
 ## Install or update on a Mac
 
@@ -44,5 +44,27 @@ Release notes are in `Development/Release_Notes.txt`. Test scripts are in
 `tests/`; run them from the repository root. Rendering tests also require NumPy. Packaging uses
 `tools/package_release.py`, which refreshes manifest hashes and creates a ZIP.
 
-This private repository is the project source for future updates. Collaborators
-need repository access; a private repository is not a public download page.
+## Create a soundtrack locally
+
+In the Music step, choose **Create music to fit this slideshow…**. Select era,
+genre and mood, optionally describe instruments or atmosphere, then generate
+and preview an instrumental take. **Use this music** adds it as the soundtrack.
+The request includes full clips, title, opening, closing fade and black tail;
+accepting a take uses visual-ending mode and disables photo Auto-Fit.
+
+Requires a separately installed ACE-Step 1.5 engine with its REST API and
+working dependencies/models. Choose the folder containing `acestep/api_server.py`
+once. The app can start its local API using that installation's Python;
+an already-running API on `http://127.0.0.1:8001` works too. The Gradio browser
+UI is a different service. Older installations may need an ACE-Step update.
+No Suno account, paid API or cloud music service is used.
+
+Takes are retained under Generated Music. Longer than ten minutes uses matching
+sections joined with crossfades. Exact timing is prepared with FFmpeg; model
+style/quality and musical continuity vary. If the timeline changes, generate a
+new take. See the bundled guide for details and cancellation behavior.
+
+Integration tests use a local simulated ACE-Step API and real FFmpeg. Actual
+model inference and Apple Silicon startup still need validation on a Mac.
+
+Project source and future updates: https://github.com/TedInVR/StereoSlideshow

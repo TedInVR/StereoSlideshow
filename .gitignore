@@ -8,3 +8,4 @@ __pycache__/
 *.zip
 Stereo Slideshows/
 .venv/
+Generated Music/

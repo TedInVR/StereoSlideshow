@@ -1,4 +1,4 @@
-STEREO SLIDESHOW — PERMANENT INSTALLATION — v0.17
+STEREO SLIDESHOW — PERMANENT INSTALLATION — v0.18
 
 FIRST INSTALL OR UPDATE
 1. Quit Stereo Slideshow if it is open.
@@ -55,6 +55,8 @@ requires working Python 3.9–3.14 and FFmpeg/FFprobe, as before. Internet is
 needed only when dependencies must be installed. No administrator password
 is requested by this installer.
 
-NEW IN v0.17
-Scroll over dropdowns and number fields without changing settings.
-Clearer animation names and visible explanations. Existing motion is preserved.
+NEW IN v0.18
+Create music to fit the slideshow: choose era, genre and mood, generate,
+preview, and use a take. Requires your installed ACE-Step 1.5 project folder
+with the REST API. First setup is explained in the music panel and User Guide.
+Generated takes are kept under Generated Music in the permanent app folder.

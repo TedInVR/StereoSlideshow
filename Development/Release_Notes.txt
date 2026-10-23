@@ -1,3 +1,27 @@
+VERSION 0.18 — MUSIC GENERATION INSIDE STEREO SLIDESHOW
+
+Create music to fit this slideshow in main Music step and Guided Walkthrough.
+Era, genre, mood, optional description; editable style choices; instrumental first.
+Targets visual duration with full clips, title/opening, fade and black tail.
+Preview/regenerate/accept; existing playlist changes only when a take is used.
+Accepting a take locks visual-ending timing and disables photo Auto-Fit.
+
+Local ACE-Step 1.5 REST client, installed-runtime startup, progress and cancellation.
+Automatically stops only the engine started by this operation. Optional local
+API key. No cloud generation service or subscription. ACE-Step/models required.
+Exact-length 48kHz stereo PCM WAV. Short requests trim from ten seconds; long
+requests use matching bounded sections with two-second crossfades. Short model
+outputs repeat instead of adding silence. Takes and prompt records retained
+under Generated Music, excluded from repository/releases.
+
+Validated: official-schema simulated REST server; submitted prompt and duration;
+download and sample-exact WAV; long-section crossfade; server errors, cancellation,
+local endpoint validation and runtime selection; Qt timing/playlist acceptance,
+walkthrough, asynchronous progress, take retention and cancel/close lifecycle.
+Existing playlist, scrolling and installer regressions checked.
+Actual ACE-Step inference and Apple Silicon startup have not been run in this
+build environment and require checking with the user's installed engine.
+
 VERSION 0.17 — SAFE SCROLLING AND CLEARER ANIMATION CONTROLS
 
 Mouse wheel gestures over settings dropdowns and number fields scroll the
