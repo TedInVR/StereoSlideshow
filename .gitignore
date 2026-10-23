@@ -1,0 +1,10 @@
+Runtime/
+Settings/
+Logs/
+Updates/
+__pycache__/
+*.py[cod]
+.DS_Store
+*.zip
+Stereo Slideshows/
+.venv/

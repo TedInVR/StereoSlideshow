@@ -1,0 +1,60 @@
+STEREO SLIDESHOW — PERMANENT INSTALLATION — v0.17
+
+FIRST INSTALL OR UPDATE
+1. Quit Stereo Slideshow if it is open.
+2. Double-click Install or Update.command in this extracted folder.
+3. When installation finishes, Finder shows Stereo Slideshow.app in its
+   permanent folder and the app opens.
+4. Drag that app into the Dock once if you want a Dock shortcut.
+
+The installer uses /Applications/Stereo Slideshow when writable. If it cannot
+write there, it uses your personal Applications/Stereo Slideshow folder.
+The exact location is printed in the installer window. You can instead put
+this entire folder in either Applications location before running the command.
+
+ONE PERMANENT FOLDER
+Stereo Slideshow/
+  Stereo Slideshow.app       Your permanent app and icon
+  Development/               One source folder, artwork, guide and installer code
+  Runtime/                   Python and app dependencies, created on installation
+  Settings/                  Your preferences and captions
+  Logs/                      Diagnostic app.log
+  Updates/                   One previous-source backup when updating
+  Install or Update.command  Setup and update entry point
+
+Keep the entire permanent folder together. Open the app normally from this
+folder or the Dock. Do not move just the .app out of its containing folder.
+You do not run the installer to use the app each day.
+
+FUTURE UPDATES
+Extract the new update ZIP in Downloads and run its Install or Update.command.
+It finds and updates the same permanent folder. Do not drag a downloaded
+folder on top of your installed folder or choose Replace in Finder.
+The app's name, bundle identity and path stay fixed. Your Dock shortcut
+continues to use that same app. Settings and captions are not overwritten.
+A previous source backup is saved as Updates/Previous_Source.zip.
+
+MOVING FROM v0.12
+Existing settings and captions are copied into Settings if needed. The
+installer tries to copy the existing runtime to avoid downloading it again.
+A recognized older app launcher is redirected to the permanent app when
+writable, with a backup kept in Updates. Older files are retained so migration
+is reversible. Add the newly illustrated permanent app to the Dock once
+if your previous shortcut still has the generic icon.
+
+INSIDE THE APP
+Help > User Guide
+Help > Guided Walkthrough
+Help > Open Stereo Slideshow Folder
+
+Your source photos, videos and music remain in their original locations.
+Exports continue to use the save location selected inside the app.
+
+If installation stops, copy the error into our conversation. Installation
+requires working Python 3.9–3.14 and FFmpeg/FFprobe, as before. Internet is
+needed only when dependencies must be installed. No administrator password
+is requested by this installer.
+
+NEW IN v0.17
+Scroll over dropdowns and number fields without changing settings.
+Clearer animation names and visible explanations. Existing motion is preserved.

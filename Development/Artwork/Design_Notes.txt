@@ -1,0 +1,3 @@
+Created with the built-in image-generation tool.
+Prompt: macOS app icon for Stereo Slideshow; two slightly offset luminous photo cards suggesting binocular stereo depth, a mountain-and-sun scene and play triangle; midnight blue rounded-square tile, cyan and coral accents, no lettering, transparent outside the tile.
+The original artwork is retained here; application PNG and ICNS sizes were derived from it for packaging.

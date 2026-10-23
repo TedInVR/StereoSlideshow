@@ -1,0 +1,106 @@
+VERSION 0.17 — SAFE SCROLLING AND CLEARER ANIMATION CONTROLS
+
+Mouse wheel gestures over settings dropdowns and number fields scroll the
+containing pane without changing settings, including focused controls.
+The walkthrough has the same protection. Click/type selection remains available.
+
+Animation names: Zoom and pan; Subtle zoom and pan. A visible explanation
+clarifies zoom cropping versus 2% zoom and small movement. Pan distance
+(subtle mode) is disabled in the other mode. Existing saved animation choices
+and rendered movement are preserved. Updated guide and GitHub README.
+
+Validated Qt wheel forwarding and unchanged control values, focused controls,
+walkthrough, deliberate selection, existing playlist and layout/shortcut tests.
+Native macOS mouse/trackpad behavior still needs confirmation on a Mac.
+
+VERSION 0.16 — CLEARER MAIN WINDOW AND KEYBOARD SHORTCUTS
+
+Tall content list on the left; numbered settings groups on the right.
+Content header explains drag and drop. Existing video and music features remain.
+Auto-Fit photos to music (seconds per photo) shows the calculated duration
+in the disabled Seconds per photo field. Turning it off restores manual timing.
+Command-W saves and closes the expanded organizer. Help > Keyboard Shortcuts
+lists editable shortcuts, with saved preferences and duplicate detection.
+Automatic start after dropping files is removed, including saved auto-start behavior.
+The progress bar is hidden while idle and appears during rendering.
+Updated bundled user guide. Permanent launcher and app identity are retained.
+
+Validation: Qt layout geometry, auto-fit duration/manual restoration, organizer
+Command-W, custom shortcut persistence, playlist/walkthrough regression,
+error dialog regression, installer checks and Python compilation.
+Mac-native display and shortcuts require checking on the user's Mac.
+
+VERSION 0.15 — EXPANDED ORGANIZER, MUSIC PLAYLIST AND TIMING
+
++ Expand lists opens a maximized organizer with photo/video and music lists.
+Both support drag reordering and explicit move buttons. Return/Save commits;
+Cancel leaves the project unchanged. The main music list is also reorderable.
+
+Multiple ordered music tracks, with per-track and total m:ss and seconds.
+Duration reads run in a background worker with caching.
+
+Two ending modes: visual sequence or music playlist. Visual-ending repeats
+the entire ordered playlist if needed. Music-ending plays one playlist pass,
+with the closing fade inside its duration and no additional black tail.
+Manual music-ending can trim later visuals or hold the final displayed frame;
+the calculator reports this explicitly.
+
+Automatic fitting reserves title/opening, full video clips, closing fade and
+divides the remainder equally among photos, with one-frame rounding adjustment.
+Impossible fits stop before encoding. Exports normalize/recheck the decoded
+playlist length before building a music-ending timeline.
+
+Calculator and playlist supported in the Guided Walkthrough. Existing single
+music settings migrate to a one-track playlist. Permanent app identity and
+settings location are unchanged.
+
+TESTED
+Frame-based calculations and impossible budgets; ordered two-tone soundtrack;
+whole-playlist repetition; music-ending hold and trim; auto-fit duration;
+SBS/anaglyph decode; odd-width photo regression; mixed photos/full video with
+retained audio; Qt organizer expansion, order changes, Cancel isolation,
+endpoint controls, duration display and walkthrough playlist preservation.
+
+VERSION 0.14 — ODD-WIDTH PHOTOS AND READABLE ERRORS
+
+Odd-width SBS photos are accepted. Rendering uses equal eye crops, omitting
+the single center seam column. The original file is never written or changed.
+Even-width input crops are unchanged.
+
+Every photo is fully decoded and checked before the video encoder starts.
+Video metadata and the music track are also checked before rendering.
+Corrupt or missing inputs now fail early with a short filename-specific message.
+
+Raw processing logs no longer appear as popup text or in the status label.
+Errors use a bounded dialog with a visible Close button, Escape dismissal,
+and optional scrollable technical details. Full diagnostics are saved under
+Logs/render_error_TIMESTAMP.txt. An Open Logs folder button makes sharing
+an error report easier. Cancellation updates status without another modal.
+
+Tested exact odd/even eye cropping, odd-width JPEG render with WAV music,
+SBS/anaglyph decoding, unchanged source bytes, corrupt-photo detection before
+encoding, concise FFmpeg failures, and oversized-error dialog behavior with
+large diagnostics. Qt offscreen tests verified Close visibility and Escape.
+
+VERSION 0.13 — PERMANENT APPLICATION PACKAGING
+
+- One permanent Stereo Slideshow project folder in Applications.
+- Dedicated PNG and ICNS app icon, applied to the app and Qt window/Dock.
+- Fixed bundle identity and launcher path across updates.
+- One Development folder containing all source, the guide and icon artwork.
+- Local Runtime, Settings, Logs and Updates folders.
+- Migration of preferences, edited captions and deliberately blank captions.
+- Reuses a copied previous runtime where available; leaves the original intact.
+- Previous-source backup on updates; refuses unrelated destination folders.
+- Recognized older shortcuts can forward to the permanent app.
+- Help > Open Stereo Slideshow Folder.
+- Single-instance guard to prevent accidentally running two copies.
+
+Validation performed in Linux:
+Installer file operations, migration, repeat update, stable app bundle path,
+backups, quoted paths, icon decoding, old-launcher forwarding and folder
+collision protection. Qt offscreen: settings, saved blank captions, guide,
+walkthrough and icon loading. Python compilation and shell syntax checks.
+The rendering engine is byte-for-byte unchanged from v0.12.
+Mac-native LaunchServices registration and Dock presentation require the
+first installation on the Mac; they cannot be executed in this build system.
