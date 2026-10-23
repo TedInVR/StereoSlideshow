@@ -3,7 +3,7 @@
 A macOS desktop app for making stereoscopic photo/video slideshows, with
 ordered music tracks, stereo captions, animated photos, titles and fades.
 Exports full side-by-side MP4, red/cyan anaglyph MP4, and an optional
-YouTube compatibility MKV. Version 0.23.
+YouTube compatibility MKV. Version 0.24.
 
 ## Install or update on a Mac
 
@@ -124,3 +124,23 @@ Base may download on first use. A separately running API must have Base loaded
 for instrument generation. AI edits support source/result lengths up to ten
 minutes. Model performance and musical fit need auditioning; model inference
 for these new edit tasks requires testing on the Mac. See Help → User guide.
+
+## Upload to YouTube
+
+Use **File → Upload finished SBS video to YouTube…**, or the YouTube controls
+in Export. Connect your channel using your own Google Desktop OAuth client;
+enable YouTube Data API v3 and follow **Help → User guide → YouTube upload**.
+Tokens use macOS Keychain. No shared OAuth credentials are included in this
+repository. Client JSON, preferences, tokens and personal media must not be
+committed. Testing clients may require reconnection after seven days.
+
+Review the title, exact description, reusable template, tags, audience,
+synthetic-content disclosure and Private/Unlisted/Public visibility. New uploads
+default to Private. The automatic option authorizes one render only and resets.
+A tagged stereo MKV upload copy is remuxed without re-encoding; ordinary Full-SBS
+and anaglyph exports are retained. Interrupted chunks retry within the current
+session. Closing/restarting the app does not resume an unfinished upload.
+
+The offline OAuth/protocol and UI tests use simulated Google responses; actual
+Mac sign-in, Keychain access and a Private test upload still need validation.
+VR180 cinema and immersive footage are the next phase, not part of v0.24.

@@ -59,14 +59,19 @@ def migrate_settings(target,home):
         json.loads(legacy.read_text());atomic_copy(legacy,destination)
         print('Carried over existing settings and captions.')
 
-def runtime_ok(python):
+def runtime_ok(python,full=True):
     if not python.exists():return False
-    check="import PIL,PySide6;from PySide6 import QtWidgets;import sys;sys.exit(0 if (3,9)<=sys.version_info[:2]<(3,15) else 1)"
+    check=("import PIL,PySide6,keyring;from PySide6 import QtWidgets;" if full else "")+"import sys;sys.exit(0 if (3,9)<=sys.version_info[:2]<(3,15) else 1)"
     return subprocess.run([str(python),'-c',check],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0
 
 def ensure_runtime(target,home):
     env=target/'Runtime/venv';python=env/'bin/python'
     if runtime_ok(python):print('Existing runtime is ready.');return
+    if runtime_ok(python,full=False):
+        print('Updating app dependencies in the existing runtime…')
+        subprocess.run([str(python),'-m','pip','install','-r',str(target/'Development/requirements.txt')],check=True)
+        if not runtime_ok(python):raise RuntimeError('The updated runtime could not be verified. Please share the installer output.')
+        return
     legacy=home/'Library/Application Support/Stereo Slideshow/venv'
     if not env.exists() and runtime_ok(legacy/'bin/python'):
         print('Copying the existing runtime into the permanent folder…')

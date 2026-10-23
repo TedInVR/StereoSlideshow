@@ -1,3 +1,33 @@
+VERSION 0.24 — DIRECT YOUTUBE UPLOADS (FIRST PHASE)
+
+File-menu uploader and Export-section controls. Google Desktop OAuth through
+system browser, loopback state validation and PKCE; upload and channel-read
+scopes. User-provided Desktop client JSON; no embedded shared project. Tokens
+use explicit macOS Keychain backend, without plaintext fallback. Refresh,
+channel display and pre-upload channel-ID check; disconnect/revocation attempt.
+Installer upgrades dependencies in an existing working runtime for Keychain.
+
+Editable title, exact video description, reusable template with title/filename
+tokens, default comma-separated tags, explicit audience, synthetic disclosure,
+and Private/Unlisted/Public. New dialogs default to Private. Upload notice and
+privacy/data documentation. One-render automatic-upload consent is collected
+before rendering; cleared on start, failure and cancellation; never persisted.
+Normal Full-SBS source ensured for automatic uploads; anaglyph is not selected.
+
+Lossless remux to a temporary tagged stereo MKV; per-eye display ratio and
+left/right metadata verified. Original video/audio retained. Resumable 2 MiB
+chunks, interrupted-write status query, bounded retries and cancellation; no
+cross-restart resume. Result link/history, processing disclaimer and duplicate
+retry caution. VR180 cinema and mixed footage remain the next phase.
+
+Validated offline OAuth callback/state/PKCE/cancellation, token refresh,
+metadata/visibility/audience validation, channel/endpoint guards, interrupted
+chunk recovery, actual FFmpeg stereo aspect and audio-byte preservation,
+Qt template/upload/arming/one-shot/failure/cancellation flow, existing music,
+project and mouse-wheel behavior, and installer migration. No live Google
+account, real upload or Mac Keychain prompt was exercised here. Complete
+Google project setup and perform a Private test upload on the Mac first.
+
 VERSION 0.23 — SAVED AUDIO TAKES, PASSAGE EDITS AND ACCOMPANIMENT
 
 Saved-take selector; import/reload external audio into a private working copy;

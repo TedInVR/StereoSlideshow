@@ -1,4 +1,4 @@
-STEREO SLIDESHOW — PERMANENT INSTALLATION — v0.23
+STEREO SLIDESHOW — PERMANENT INSTALLATION — v0.24
 
 FIRST INSTALL OR UPDATE
 1. Quit Stereo Slideshow if it is open.
@@ -55,10 +55,12 @@ requires working Python 3.9–3.14 and FFmpeg/FFprobe, as before. Internet is
 needed only when dependencies must be installed. No administrator password
 is requested by this installer.
 
-NEW IN v0.23
-Save Audio As WAV, FLAC or MP3; reload saved takes and external recordings.
-Replace a selected passage, extend an ending or trim to slideshow length.
-Add an instrument over the original recording (requires ACE-Step Base).
-Every edit is a new take; originals and earlier takes are kept.
-Keep exported audio and its companion JSON together to reload lyrics/settings.
-See Help > User guide for detailed steps and model requirements.
+NEW IN v0.24
+Upload finished SBS videos to your own YouTube channel.
+Editable title, description template, tags, visibility and audience controls.
+Optional automatic upload after one successful render; resets afterward.
+First use requires your own Google Desktop OAuth client and channel connection.
+See Help > User guide > YouTube upload for step-by-step Google setup.
+No credentials are bundled. Test with Private visibility before public uploads.
+Existing audio editing, project saving, permanent icon and exports are retained.
+VR180 cinema is the next phase, not included in this update.

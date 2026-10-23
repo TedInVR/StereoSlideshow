@@ -163,6 +163,24 @@ class Window(ProjectMixin,Q.QWidget):
         from ui_controls import protect_settings_wheel
         protect_settings_wheel(self)
         self.setup_projects(file_menu)
+        file_menu.addSeparator();action=file_menu.addAction('Upload finished SBS video to YouTube…');action.triggered.connect(self.upload_youtube)
+        self.upload_after=Q.QCheckBox('Upload to YouTube after this render (also creates Full-SBS)');self.upload_after.setChecked(False);groups['export'].addRow(self.upload_after)
+        upload_button=Q.QPushButton('YouTube account, template and upload…');upload_button.clicked.connect(self.upload_youtube);groups['export'].addRow(upload_button)
+        self.pending_upload=None
+    def upload_youtube(self):
+        from youtube_dialog import YouTubeDialog
+        source=next((path for path in getattr(self,'last_exports',[]) if '_Full_SBS_' in Path(path).name and Path(path).suffix.lower()=='.mp4'),'')
+        dialog=YouTubeDialog(self,source,self.title.text());dialog.synthetic.setChecked(any('Generated Music' in Path(path).parts for path in self.playlist()));dialog.exec()
+    def review_youtube_render(self):
+        from youtube_dialog import YouTubeDialog
+        dialog=YouTubeDialog(self,title=self.title.text() or 'Untitled Stereo Slideshow',arm=True);dialog.synthetic.setChecked(any('Generated Music' in Path(path).parts for path in self.playlist()))
+        if dialog.exec()!=Q.QDialog.Accepted:return None
+        return dialog.plan
+    def upload_rendered_youtube(self,source,plan):
+        from youtube_dialog import YouTubeDialog
+        dialog=YouTubeDialog(self,source,plan['title'],plan=plan);dialog.plan=plan
+        QtCore.QTimer.singleShot(0,dialog.start_armed);dialog.exec()
+
     def describe_animation(self):
         subtle=self.animation.currentIndex()==1
         self.animation_help.setText('Keeps the whole photo visible, with a 2% zoom change and very small horizontal, vertical or diagonal movement. Pan distance controls how far it moves.' if subtle else 'Alternates close-up zooms with left/right and up/down movement. Close-up zooms crop the top and bottom; side-moving photos are shown large. The pan-distance setting applies only to Subtle zoom and pan.')
@@ -334,17 +352,22 @@ class Window(ProjectMixin,Q.QWidget):
         if self.project_worker is not None and self.project_worker.isRunning():return
         if self.worker and self.worker.isRunning(): return
         if not self.files.count(): Q.QMessageBox.information(self,'Add photos','Drop some SBS photos or video clips first.'); return
-        if not(self.sbs.isChecked() or self.ana.isChecked() or self.yt.isChecked()): Q.QMessageBox.information(self,'Choose output','Select at least one output format.'); return
+        if not(self.sbs.isChecked() or self.ana.isChecked() or self.yt.isChecked() or self.upload_after.isChecked()): Q.QMessageBox.information(self,'Choose output','Select at least one output format.'); return
+        upload_plan=None
+        if self.upload_after.isChecked():
+            upload_plan=self.review_youtube_render()
+            if upload_plan is None:return
         h=[1080,2160,540][self.res.currentIndex()]
         num,den=map(int,self.aspect.currentText().split(':')); eye_w=2*round(h*num/den/2); w=eye_w*2
         output=str(Path(item_path(self.files.item(0))).parent/'Stereo Slideshows') if self.source.isChecked() else self.out.text()
         self.actual_output=output
-        cfg=dict(playlist=self.playlist(),end_mode_index=self.end_mode.currentIndex(),end_mode='music' if self.end_mode.currentIndex()==1 else 'visuals',fit_music=self.fit_music.isChecked(),depth_layers=self.layers.isChecked(),layer_strength=self.layer_strength.currentIndex(),captions=self.captions,caption_front=self.caption_front,muted_videos=[item_path(self.files.item(i)) for i in range(self.files.count()) if Path(item_path(self.files.item(i))).suffix.lower() in VIDEO_EXT and self.files.item(i).checkState()==QtCore.Qt.Unchecked],closing_fade=self.closing.value(),video_half=self.video_half.isChecked(),video_cross=self.video_cross.isChecked(),video_sound=self.video_sound.isChecked(),motion_style=['Closer zoom and side drift','Gentle'][self.animation.currentIndex()],background_style_v6=self.backdrop.currentText(),eye_aspect=self.aspect.currentText(),background_style=self.backdrop.currentText(),drift=[0,.0015,.003][self.drift.currentIndex()],drift_choice_v4=self.drift.currentIndex(),width=w,height=h,fps=30,seconds=self.sec.value(),seconds_v3=self.manual_seconds if self.fit_music.isChecked() else self.sec.value(),pause=self.pause.value(),title_seconds=self.title_sec.value(),title=self.title.text(),title_motion=self.motion.currentText(),background=self.bg,text_color=self.fg,cross=self.cross.isChecked(),sbs=self.sbs.isChecked(),youtube=self.yt.isChecked(),youtube_v4=self.yt.isChecked(),source_output=self.source.isChecked(),anaglyph=self.ana.isChecked(),audio=self.audio,output=self.out.text(),resolution=self.res.currentIndex())
+        cfg=dict(playlist=self.playlist(),end_mode_index=self.end_mode.currentIndex(),end_mode='music' if self.end_mode.currentIndex()==1 else 'visuals',fit_music=self.fit_music.isChecked(),depth_layers=self.layers.isChecked(),layer_strength=self.layer_strength.currentIndex(),captions=self.captions,caption_front=self.caption_front,muted_videos=[item_path(self.files.item(i)) for i in range(self.files.count()) if Path(item_path(self.files.item(i))).suffix.lower() in VIDEO_EXT and self.files.item(i).checkState()==QtCore.Qt.Unchecked],closing_fade=self.closing.value(),video_half=self.video_half.isChecked(),video_cross=self.video_cross.isChecked(),video_sound=self.video_sound.isChecked(),motion_style=['Closer zoom and side drift','Gentle'][self.animation.currentIndex()],background_style_v6=self.backdrop.currentText(),eye_aspect=self.aspect.currentText(),background_style=self.backdrop.currentText(),drift=[0,.0015,.003][self.drift.currentIndex()],drift_choice_v4=self.drift.currentIndex(),width=w,height=h,fps=30,seconds=self.sec.value(),seconds_v3=self.manual_seconds if self.fit_music.isChecked() else self.sec.value(),pause=self.pause.value(),title_seconds=self.title_sec.value(),title=self.title.text(),title_motion=self.motion.currentText(),background=self.bg,text_color=self.fg,cross=self.cross.isChecked(),sbs=self.sbs.isChecked() or bool(upload_plan),youtube=self.yt.isChecked(),youtube_v4=self.yt.isChecked(),source_output=self.source.isChecked(),anaglyph=self.ana.isChecked(),audio=self.audio,output=self.out.text(),resolution=self.res.currentIndex())
         if cfg['end_mode']=='music' or cfg['fit_music']:
             plan,message=self.preview_for([item_path(self.files.item(i)) for i in range(self.files.count())],self.playlist(),cfg)
             if plan is None:
                 Q.QMessageBox.information(self,'Timing calculator',message);return
         SETTINGS.parent.mkdir(parents=True,exist_ok=True); SETTINGS.write_text(json.dumps(cfg,indent=2)); self.muted_paths=set(cfg['muted_videos'])
+        self.pending_upload=upload_plan;self.upload_after.setChecked(False)
         self.worker=Worker([item_path(self.files.item(i)) for i in range(self.files.count())],self.playlist(),output,cfg)
         self.worker.update.connect(self.progress); self.worker.done.connect(self.finished); self.worker.failed.connect(self.error)
         self.bar.setValue(0);self.bar.show();self.start.setEnabled(False); self.stop.setEnabled(True); self.worker.start()
@@ -352,9 +375,15 @@ class Window(ProjectMixin,Q.QWidget):
     def cancel(self):
         if self.worker: self.worker.cancel.set(); self.status.setText('Cancelling…')
     def finished(self,files):
+        self.last_exports=list(files);plan=self.pending_upload;self.pending_upload=None
         self.bar.hide()
         self.start.setEnabled(True); self.stop.setEnabled(False); self.status.setText('Finished: '+ '\n'.join(files)); QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(self.actual_output))
+        if plan:
+            source=next((path for path in files if '_Full_SBS_' in Path(path).name and Path(path).suffix.lower()=='.mp4'),'')
+            if source:self.upload_rendered_youtube(source,plan)
+            else:self.status.setText('Rendering finished, but no Full-SBS MP4 was available for the requested upload. Local exports are safe.')
     def error(self,s,logfile=''):
+        self.pending_upload=None
         self.bar.hide()
         self.start.setEnabled(True);self.stop.setEnabled(False);self.status.setText(s[:240])
         if s.startswith('Cancelled.'):return
