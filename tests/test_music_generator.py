@@ -50,5 +50,14 @@ try:
    except MusicError:pass
   folder=root/'ACE-Step-1.5';(folder/'acestep').mkdir(parents=True);(folder/'acestep/api_server.py').touch();(folder/'.venv/bin').mkdir(parents=True);python=folder/'.venv/bin/python';python.touch();python.chmod(0o755)
   install,cmd=launch_command(str(folder),8001);assert cmd[1:]==['-m','acestep.api_server','--host','127.0.0.1','--port','8001']
+  # Reproduce Ted's portable distribution with copied, dangling .venv links.
+  python.unlink();python.symlink_to('/Users/sayo/.local/share/uv/python/missing/bin/python3.11')
+  (folder/'.venv/bin/python3').symlink_to('python')
+  portable=folder/'python_embeded/bin/python3.11';portable.parent.mkdir(parents=True);portable.touch();portable.chmod(0o755)
+  install,cmd=launch_command(str(folder),8001);assert cmd[0]==str(portable)
+  portable.parent.parent.rename(folder/'python_embedded')
+  install,cmd=launch_command(str(folder),8001);assert cmd[0]==str(folder/'python_embedded/bin/python3.11')
+  (folder/'python_embedded/bin/python3.11').rename(folder/'python_embedded/bin/python3')
+  install,cmd=launch_command(str(folder),8001);assert cmd[0]==str(folder/'python_embedded/bin/python3')
  print('ACE REST generation/download, exact stereo WAV duration, long-section crossfade, failure/cancellation, local URL and installed-runtime selection passed.')
 finally:server.shutdown();server.server_close()

@@ -1,3 +1,16 @@
+VERSION 0.20 — ACE-STEP PORTABLE PYTHON DETECTION
+
+Recognizes both python_embeded and python_embedded portable runtime folders,
+including Python 3.11, python3 and python entry points. Skips dangling .venv
+links such as those copied from the distribution packager's account.
+The selected ACE-Step project can live in Applications; no Python reinstall
+is required when its bundled interpreter and dependencies work.
+
+Validated: reproduction of dangling .venv links with python_embeded fallback;
+alternate spelling and python3 fallback; API/download/exact-audio regression.
+The user confirmed bundled Python 3.11.14, PyTorch 2.10 and Apple GPU access
+on their Mac. Full ACE-Step API startup/generation still needs a Mac test.
+
 VERSION 0.19 — READABLE TIMING SUMMARY
 
 Replaced the clipped multiline timing label with a read-only text box below

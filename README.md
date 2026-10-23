@@ -3,7 +3,7 @@
 A macOS desktop app for making stereoscopic photo/video slideshows, with
 ordered music tracks, stereo captions, animated photos, titles and fades.
 Exports full side-by-side MP4, red/cyan anaglyph MP4, and an optional
-YouTube compatibility MKV. Version 0.19.
+YouTube compatibility MKV. Version 0.20.
 
 ## Install or update on a Mac
 
@@ -54,7 +54,7 @@ accepting a take uses visual-ending mode and disables photo Auto-Fit.
 
 Requires a separately installed ACE-Step 1.5 engine with its REST API and
 working dependencies/models. Choose the folder containing `acestep/api_server.py`
-once. The app can start its local API using that installation's Python;
+once. Both `python_embeded` and `python_embedded` portable Python folders are supported; dangling copied `.venv` links are skipped. The app can start its local API using that installation's Python;
 an already-running API on `http://127.0.0.1:8001` works too. The Gradio browser
 UI is a different service. Older installations may need an ACE-Step update.
 No Suno account, paid API or cloud music service is used.

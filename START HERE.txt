@@ -1,4 +1,4 @@
-STEREO SLIDESHOW — PERMANENT INSTALLATION — v0.19
+STEREO SLIDESHOW — PERMANENT INSTALLATION — v0.20
 
 FIRST INSTALL OR UPDATE
 1. Quit Stereo Slideshow if it is open.
@@ -55,7 +55,7 @@ requires working Python 3.9–3.14 and FFmpeg/FFprobe, as before. Internet is
 needed only when dependencies must be installed. No administrator password
 is requested by this installer.
 
-NEW IN v0.19
-The timing calculation below Auto-Fit now has a readable text box with room
-for eight lines and scrolling for overflow. The music generator from v0.18
-is also included; use Create music to fit this slideshow in the Music step.
+NEW IN v0.20
+Recognizes ACE-Step's python_embeded portable runtime and skips broken copied
+.venv links. Select your ACE-Step folder in Applications and retry generation.
+The readable timing summary and music generator from previous updates remain.

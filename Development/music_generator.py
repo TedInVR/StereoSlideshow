@@ -98,7 +98,12 @@ def launch_command(folder,port):
     root=Path(folder).expanduser().resolve()
     if not (root/'acestep/api_server.py').is_file():raise MusicError('Choose the ACE-Step project folder containing acestep/api_server.py. This installation may need an ACE-Step update to support its REST API.')
     args=['--host','127.0.0.1','--port',str(port)]
-    for relative in ['.venv/bin/python','.venv/bin/python3','venv/bin/python','python_embedded/bin/python3.11']:
+    # Portable ACE-Step distributions use both spellings. A copied .venv
+    # may contain dangling links to the packager's machine; is_file skips them.
+    candidates=['.venv/bin/python','.venv/bin/python3','venv/bin/python']
+    for directory in ['python_embeded','python_embedded']:
+        candidates.extend(f'{directory}/bin/{name}' for name in ['python3.11','python3','python'])
+    for relative in candidates:
         python=root/relative
         if python.is_file() and os.access(python,os.X_OK):return root,[str(python),'-m','acestep.api_server']+args
     uv=shutil.which('uv')
