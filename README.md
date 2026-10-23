@@ -3,7 +3,7 @@
 A macOS desktop app for making stereoscopic photo/video slideshows, with
 ordered music tracks, stereo captions, animated photos, titles and fades.
 Exports full side-by-side MP4, red/cyan anaglyph MP4, and an optional
-YouTube compatibility MKV. Version 0.21.
+YouTube compatibility MKV. Version 0.22.
 
 ## Install or update on a Mac
 
@@ -48,7 +48,7 @@ Release notes are in `Development/Release_Notes.txt`. Test scripts are in
 
 In the Music step, choose **Create music to fit this slideshow…**. Select era,
 genre and mood, optionally describe instruments or atmosphere, then generate
-and preview an instrumental take. **Use this music** adds it as the soundtrack.
+and preview an instrumental take or vocal song. **Use this music** adds it as the soundtrack.
 The request includes full clips, title, opening, closing fade and black tail;
 accepting a take uses visual-ending mode and disables photo Auto-Fit.
 
@@ -59,7 +59,7 @@ an already-running API on `http://127.0.0.1:8001` works too. The Gradio browser
 UI is a different service. Older installations may need an ACE-Step update.
 No Suno account, paid API or cloud music service is used.
 
-Takes are retained under Generated Music. Longer than ten minutes uses matching
+Takes are retained under Generated Music. Instrumental music longer than ten minutes uses matching
 sections joined with crossfades. Exact timing is prepared with FFmpeg; model
 style/quality and musical continuity vary. If the timeline changes, generate a
 new take. See the bundled guide for details and cancellation behavior.
@@ -87,3 +87,21 @@ Uses the title (or an eight-digit random prefix), chosen resolution and final
 duration, rounded to seconds. Exact minutes use `4min`; under a minute uses
 `44sec`. Anaglyph and optional compatibility MKV have distinct format tags.
 Existing matching exports get a numbered title suffix instead of being replaced.
+
+## Songs with vocals and saved descriptions
+
+Music mode offers **Instrumental**, **Write a song about a topic**, and
+**Use my lyrics**. Select vocal preference and language for songs. Topic mode
+requires ACE-Step's language model; it generates words and music together.
+Returned lyrics can be reviewed, edited and reused for another take. Supplied
+lyrics are passed unchanged. Vocal songs support up to ten minutes in this
+version; unusually short vocal results are not looped. Voice, delivery and
+adherence to all words are model-dependent.
+
+**Saved descriptions** includes seven user-supplied starter arrangements.
+Load, edit, save under a name, update or remove a description. The editor's text
+is retained on removal. Personal lists persist under Settings across projects
+and app updates. Use **Genre → Use description only** for a detailed description
+without adding a broad genre. Descriptions mentioning vocals should be used
+with a song mode if singing is wanted. Projects retain the selected text and
+song choices; they do not embed the entire personal saved-description list.

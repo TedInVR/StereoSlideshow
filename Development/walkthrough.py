@@ -24,7 +24,7 @@ class Page(Q.QWizardPage):
 
 class Walkthrough(Q.QWizard):
     def __init__(self,main,caption_editor):
-        super().__init__(main);self.main=main;self.caption_editor=caption_editor
+        super().__init__(main);self.main=main;self.caption_editor=caption_editor;self.project_music_style=dict(main.project_music_style);self.shortcuts=main.shortcuts
         self.setWindowTitle('Stereo Slideshow — Guided Walkthrough');self.resize(840,700)
         self.setWizardStyle(Q.QWizard.ClassicStyle);self.setOption(Q.QWizard.HaveHelpButton,True);self.helpRequested.connect(main.show_guide)
         self.setButtonText(Q.QWizard.FinishButton,'Create slideshow')
@@ -176,9 +176,11 @@ class Walkthrough(Q.QWizard):
         for i in range(self.playlist.count()):
             item=self.playlist.item(i);label_audio(item,self.main.duration(path_of(item)))
         self.refresh_review(self.currentId())
+    def project_changed(self,*args):self.music_style_changed=True
     def cleanup(self):
         self.main.durations_changed.disconnect(self.duration_update)
     def apply(self):
+        self.main.project_music_style=dict(self.project_music_style)
         for name,source in self.controls.items():
             dest=getattr(self.main,name)
             if isinstance(source,Q.QCheckBox):dest.setChecked(source.isChecked())

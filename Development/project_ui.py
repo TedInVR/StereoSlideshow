@@ -4,6 +4,7 @@ from pathlib import Path
 from PySide6 import QtCore,QtGui,QtWidgets as Q
 from app_paths import VERSION,ROOT
 from engine import VIDEO_EXT
+from music_generator import STYLE_KEYS
 from organizer import audio_item
 from project_bundle import EXT,ProjectCancelled,ProjectError,read_project,save_project,new_project_path
 
@@ -21,7 +22,7 @@ class ProjectMixin:
     def setup_projects(self,menu):
         try:generator=json.loads((ROOT/'Settings/music_generator.json').read_text())
         except (OSError,ValueError):generator={}
-        self.project_music_style={key:generator[key] for key in ['era','genre','mood','details'] if isinstance(generator.get(key),str)}
+        self.project_music_style={key:generator[key] for key in STYLE_KEYS if isinstance(generator.get(key),str)}
         self.project_file=None;self.project_dirty=False;self.project_revision=0;self.project_worker=None;self._loading_project=False;self._after_save=None
         for label,callback in [('Save Project',self.save_project),('Save Project As…',self.save_project_as),('Open Project…',self.open_project)]:
             action=menu.addAction(label);action.triggered.connect(lambda _=False,fn=callback:fn())
@@ -103,7 +104,7 @@ class ProjectMixin:
             else:valid=isinstance(value,str)
             if not valid:raise ProjectError('The project setting is invalid: '+name)
         style=settings.get('music_style',{})
-        if not isinstance(style,dict) or any(key not in ['era','genre','mood','details'] or not isinstance(value,str) for key,value in style.items()):raise ProjectError('The project music style is invalid.')
+        if not isinstance(style,dict) or any(key not in STYLE_KEYS or not isinstance(value,str) for key,value in style.items()):raise ProjectError('The project music style is invalid.')
         for name in ['bg','fg']:
             if not isinstance(settings.get(name),str) or not QtGui.QColor(settings[name]).isValid():raise ProjectError('The project contains an invalid color.')
         if not isinstance(settings.get('caption_front'),bool):raise ProjectError('The project caption setting is invalid.')
@@ -128,7 +129,7 @@ class ProjectMixin:
                 elif isinstance(widget,Q.QComboBox):widget.setCurrentIndex(value)
                 elif isinstance(widget,Q.QDoubleSpinBox):widget.setValue(value)
                 else:widget.setText(value)
-            self.project_music_style=dict(settings.get('music_style',{}))
+            self.project_music_style=dict(music_mode='instrumental',voice='No preference',language='English',topic='',lyrics='');self.project_music_style.update(settings.get('music_style',{}))
             self.bg=settings['bg'];self.fg=settings['fg'];self.bgbutton.setText(self.bg);self.fgbutton.setText(self.fg);self.caption_front=settings['caption_front'];self.manual_seconds=settings['manual_seconds'];self.captions=data['captions'];self.muted_paths=set()
             self.files.clear()
             for record in data['media']:

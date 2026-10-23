@@ -1,17 +1,42 @@
 """Local ACE-Step REST integration and exact-length soundtrack assembly."""
 import json, math, os, platform, shutil, signal, subprocess, time, urllib.request, urllib.error, urllib.parse
 from pathlib import Path
-from engine import binary
+from engine import binary,music_duration
 
 ERAS=['Any era','1920s','1930s','1940s','1950s','1960s','1970s','1980s','1990s','2000s','Modern']
-GENRES=['Pop','Jazz','Rock and roll','Swing / big band','Blues','Country','Folk / acoustic','Classical / chamber','Orchestral film score','Ambient','Electronic / synthwave','Soul / funk','Latin / bossa nova','Ragtime','Surf rock','Music box / fairground','Barbershop-inspired instrumental']
+GENRES=['Use description only','Pop','Jazz','Rock and roll','Swing / big band','Blues','Country','Folk / acoustic','Classical / chamber','Orchestral film score','Ambient','Electronic / synthwave','Soul / funk','Latin / bossa nova','Ragtime','Surf rock','Music box / fairground','Barbershop harmony']
 MOODS=['Warm and nostalgic','Happy and upbeat','Peaceful and reflective','Romantic','Playful','Dramatic and cinematic','Mysterious','Adventurous']
 class MusicError(RuntimeError):pass
 class MusicCancelled(Exception):pass
 
-def make_prompt(era,genre,mood,details=''):
+STYLE_KEYS=('era','genre','mood','details','music_mode','voice','language','topic','lyrics')
+VOICES=['No preference','Male lead','Female lead','Male and female duet','Group / choir']
+LANGUAGES={'English':'en','Spanish':'es','French':'fr','German':'de','Italian':'it','Portuguese':'pt','Japanese':'ja','Korean':'ko','Chinese (Mandarin)':'zh','Hindi':'hi'}
+
+def make_prompt(era,genre,mood,details='',mode='instrumental',voice='No preference'):
     period='timeless' if era=='Any era' else era+'-inspired'
-    return f'{period} {genre.lower()}. {mood.lower()}. Instrumental soundtrack, no vocals, no singing, no speech. A clear melody, balanced arrangement, musical opening and a resolving ending. '+details.strip()
+    if mode!='instrumental':genre=genre.replace('-inspired instrumental',' harmony')
+    genre='' if genre=='Use description only' else genre
+    vocal='Instrumental soundtrack, no vocals, no singing, no speech.' if mode=='instrumental' else 'A song with clearly sung lyrics. '+({'Male lead':'Male lead vocals.','Female lead':'Female lead vocals.','Male and female duet':'Male and female duet vocals.','Group / choir':'Group vocals and choir harmonies.'}.get(voice,''))
+    style=' '.join(part for part in [period,genre.lower()] if part)
+    return f'{style}. {mood.lower()}. {vocal} A clear melody, balanced arrangement, musical opening and a resolving ending. '+details.strip()
+
+def validate_music_options(options,seconds):
+    mode=options.get('music_mode','instrumental')
+    if mode not in ('instrumental','topic','lyrics'):raise MusicError('Choose Instrumental, Write a song about a topic, or Use my lyrics.')
+    if mode!='instrumental' and seconds>600:raise MusicError('Vocal songs support up to ten minutes in this version. Shorten the slideshow or choose Instrumental for a longer soundtrack.')
+    if mode=='topic' and not options.get('topic','').strip():raise MusicError('Enter a subject for the song.')
+    if mode=='lyrics' and not options.get('lyrics','').strip():raise MusicError('Enter your lyrics before generating a song.')
+    if options.get('language','English') not in LANGUAGES:raise MusicError('Choose a supported vocal language.')
+
+def generation_request(options,seconds):
+    validate_music_options(options,seconds);mode=options.get('music_mode','instrumental')
+    prompt=make_prompt(options['era'],options['genre'],options['mood'],options.get('details',''),mode,options.get('voice','No preference'))
+    payload=dict(prompt=prompt,lyrics='[Instrumental]' if mode=='instrumental' else options.get('lyrics','') if mode=='lyrics' else '',audio_duration=seconds,audio_format='wav',batch_size=1,use_random_seed=True,thinking=mode=='topic',use_cot_caption=False,use_cot_language=False,task_type='text2music',use_format=False)
+    if mode!='instrumental':payload['vocal_language']=LANGUAGES[options.get('language','English')]
+    if mode=='topic':
+        payload.update(sample_mode=True,sample_query=f"Write and sing a {seconds:g}-second song in {options.get('language','English')} about: {options['topic'].strip()}. Style: {prompt} Write concise original lyrics that fit this duration, with a complete ending. Singing is required.")
+    return payload
 
 def section_lengths(seconds):
     if not math.isfinite(seconds) or seconds<=0:raise MusicError('The slideshow needs a positive duration.')
@@ -53,9 +78,9 @@ class AceClient:
     def health(self):
         result=self.request('/health')
         if not isinstance(result,dict) or result.get('service')!='ACE-Step API' or result.get('status')!='ok':raise MusicError('This address is not an ACE-Step REST API server.')
-    def generate(self,prompt,seconds,cancel,status):
+    def generate(self,prompt,seconds,cancel,status,payload=None,result_info=None):
         check_cancel(cancel)
-        submitted=self.request('/release_task',dict(prompt=prompt,lyrics='[Instrumental]',audio_duration=seconds,audio_format='wav',batch_size=1,use_random_seed=True,thinking=False,use_cot_caption=False,use_cot_language=False,task_type='text2music'))
+        submitted=self.request('/release_task',payload if payload is not None else dict(prompt=prompt,lyrics='[Instrumental]',audio_duration=seconds,audio_format='wav',batch_size=1,use_random_seed=True,thinking=False,use_cot_caption=False,use_cot_language=False,task_type='text2music'))
         task=submitted.get('task_id') if isinstance(submitted,dict) else None
         if not task:raise MusicError('ACE-Step did not return a generation task ID.')
         started=time.monotonic()
@@ -65,12 +90,15 @@ class AceClient:
             rows=self.request('/query_result',{'task_id_list':[task]})
             for row in rows if isinstance(rows,list) else []:
                 if row.get('task_id')!=task:continue
-                if row.get('status')==2:raise MusicError('ACE-Step could not generate this selection. Try a shorter slideshow or check its log.')
+                if row.get('status')==2:
+                    if payload and payload.get('sample_mode'):raise MusicError('ACE-Step could not write or generate this song. Topic mode needs its language model loaded. Check Logs/music_generator_server.log; supplying your own lyrics does not require the lyric-writing model.')
+                    raise MusicError('ACE-Step could not generate this selection. Try a shorter slideshow or check its log.')
                 if row.get('status')==1:
                     result=row.get('result',[])
                     try:result=json.loads(result) if isinstance(result,str) else result
                     except ValueError:raise MusicError('ACE-Step returned an unreadable music result.')
                     if not isinstance(result,list) or not result or not result[0].get('file'):raise MusicError('ACE-Step finished without an audio file.')
+                    if result_info is not None:result_info.append(result[0])
                     return result[0]['file']
             status(f'Creating music… {int(time.monotonic()-started)} seconds elapsed')
             if cancel.wait(2):raise MusicCancelled()
@@ -114,7 +142,7 @@ def launch_command(folder,port):
 
 class LocalServer:
     def __init__(self):self.process=None;self.log=None
-    def ensure(self,client,folder,logs,cancel,status):
+    def ensure(self,client,folder,logs,cancel,status,need_lm=False):
         try:client.health();return
         except MusicError:
             if not folder:raise
@@ -123,6 +151,7 @@ class LocalServer:
         root,command=launch_command(folder,parsed.port or 80)
         logs.mkdir(parents=True,exist_ok=True);self.log=(logs/'music_generator_server.log').open('ab')
         env=os.environ.copy();env['TOKENIZERS_PARALLELISM']='false'
+        if need_lm:env['ACESTEP_INIT_LLM']='true'
         if platform.system()=='Darwin' and platform.machine()=='arm64':env['ACESTEP_LM_BACKEND']='mlx'
         self.process=subprocess.Popen(command,cwd=root,env=env,stdin=subprocess.DEVNULL,stdout=self.log,stderr=subprocess.STDOUT,start_new_session=True)
         deadline=time.monotonic()+900
@@ -160,13 +189,15 @@ def run_ffmpeg(command,cancel):
                 try:process.wait(2)
                 except subprocess.TimeoutExpired:process.kill();process.wait()
 
-def assemble(files,seconds,output,cancel):
+def assemble(files,seconds,output,cancel,repeat=True):
     # Normalize each model result to its requested length before joining; a short
     # model result is repeated rather than adding an unexpectedly silent tail.
     requests=section_lengths(seconds);command=[binary('ffmpeg'),'-hide_banner','-loglevel','error','-y']
-    for path in files:command+=['-stream_loop','-1','-i',str(path)]
+    for path in files:
+        if not repeat and music_duration(path,cancel)+.25<seconds:raise MusicError('ACE-Step returned a song shorter than the slideshow. Try another take; vocal songs are not looped to repeat their lyrics.')
+        command+=(['-stream_loop','-1'] if repeat else [])+['-i',str(path)]
     graph=[]
-    for i,length in enumerate(requests):graph.append(f'[{i}:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,atrim=duration={length:.9f},asetpts=PTS-STARTPTS[a{i}]')
+    for i,length in enumerate(requests):graph.append(f'[{i}:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,apad,atrim=duration={length:.9f},asetpts=PTS-STARTPTS[a{i}]')
     label='a0'
     for i in range(1,len(files)):
         out=f'join{i}';graph.append(f'[{label}][a{i}]acrossfade=d=2:c1=tri:c2=tri[{out}]');label=out
@@ -176,20 +207,22 @@ def assemble(files,seconds,output,cancel):
 
 def generate_soundtrack(options,seconds,output,cancel,status):
     import tempfile
+    validate_music_options(options,seconds)
     client=AceClient(options.get('url','http://127.0.0.1:8001'),options.get('token',''));server=LocalServer();output=Path(output)
     try:
-        server.ensure(client,options.get('folder',''),Path(options['logs']),cancel,status)
-        prompt=make_prompt(options['era'],options['genre'],options['mood'],options.get('details',''))
+        mode=options.get('music_mode','instrumental');result_info=[]
+        server.ensure(client,options.get('folder',''),Path(options['logs']),cancel,status,need_lm=mode=='topic')
+        prompt=make_prompt(options['era'],options['genre'],options['mood'],options.get('details',''),mode,options.get('voice','No preference'))
         with tempfile.TemporaryDirectory(prefix='stereo-music-') as temp:
             files=[];lengths=section_lengths(seconds)
             for i,length in enumerate(lengths):
                 def update(text):status(f'Section {i+1} of {len(lengths)} — '+text)
-                update('Requesting new music…');url=client.generate(prompt,length,cancel,update)
+                update('Requesting new music…');url=client.generate(prompt,length,cancel,update,payload=generation_request(options,length),result_info=result_info)
                 path=Path(temp)/f'section{i}.wav';client.download(url,path,cancel);files.append(path)
             check_cancel(cancel);status('Matching the soundtrack to the slideshow length…');output.parent.mkdir(parents=True,exist_ok=True)
             pending=output.with_name(output.stem+'.partial.wav')
-            try:assemble(files,seconds,pending,cancel);check_cancel(cancel);pending.replace(output)
+            try:assemble(files,seconds,pending,cancel,repeat=mode=='instrumental');check_cancel(cancel);pending.replace(output)
             finally:pending.unlink(missing_ok=True)
-        output.with_suffix('.json').write_text(json.dumps(dict(prompt=prompt,requested_seconds=seconds,sections=len(lengths),engine='ACE-Step 1.5',created=time.strftime('%Y-%m-%d %H:%M:%S')),indent=2))
+        output.with_suffix('.json').write_text(json.dumps(dict(prompt=prompt,requested_seconds=seconds,sections=len(lengths),mode=mode,voice=options.get('voice','No preference'),language=options.get('language','English'),topic=options.get('topic','') if mode=='topic' else '',lyrics=(result_info[0].get('lyrics','') if result_info else '') or (options.get('lyrics','') if mode=='lyrics' else ''),engine='ACE-Step 1.5',created=time.strftime('%Y-%m-%d %H:%M:%S')),indent=2))
         return str(output)
     finally:server.stop()

@@ -1,3 +1,29 @@
+VERSION 0.22 — VOCAL SONGS AND SAVED MUSICAL DESCRIPTIONS
+
+Three modes: Instrumental; Write a song about a topic; Use my lyrics.
+Vocal preference (male, female, duet, choir, no preference) and ten language
+choices. Topic mode uses ACE-Step's sample-query generation with LM enabled
+on owned-engine startup. Returned lyrics can be reviewed, edited and reused.
+Supplied lyrics are sent unchanged. Vocal songs currently limited to ten
+minutes; short model outputs fail rather than repeating their words.
+Project settings retain mode, topic, lyrics, voice, language and description.
+Walkthrough music choices are staged until the walkthrough is completed.
+
+Named Saved descriptions dropdown, Save/update with duplicate-name confirmation,
+Remove without clearing current editor, undoable loading and atomic persistence.
+Seven supplied starter descriptions preserved verbatim with short names.
+Genre > Use description only supports detailed descriptions. Vocal-description
+notice when loaded in instrumental mode. Personal description lists stay under
+Settings and survive updates. Generation/preview actions stay outside scrolling.
+
+Validated official-schema simulated API payloads, topic lyric return, supplied
+lyrics integrity, LM startup environment, short-vocal rejection; Qt mode/lyric
+review and reuse, saved-description persistence/edit/removal/undo, project vocal
+roundtrip and legacy project compatibility, walkthrough cancel isolation;
+existing instrumental generation and playlist regression; installer checks.
+Actual model inference and voice quality still require testing on the Mac.
+This update does not establish that the user's ACE-Step API startup is working.
+
 VERSION 0.21 — PORTABLE PROJECTS AND DESCRIPTIVE EXPORT NAMES
 
 File menu: Save Project, Save Project As, Open Project. Default bundle location

@@ -22,9 +22,13 @@ with tempfile.TemporaryDirectory() as td:
  assert main.title.text()=='Our trip' and main.sec.value()==11 and main.aspect.currentText()=='1:1' and not main.ana.isChecked() and main.bg=='#123456' and not main.caption_front
  assert main.files.item(0).checkState()==QtCore.Qt.Unchecked
  restoredphoto=next(main.files.item(i).data(QtCore.Qt.UserRole) for i in range(main.files.count()) if main.files.item(i).text()=='Mom.jpg');assert main.captions[restoredphoto]=='' and all(str(path.parent) in p for p in main.playlist())
- assert not main.project_dirty and len(main.menu.actions())==2 and main.project_music_style=={'era':'1950s','genre':'Ragtime'}
+ assert not main.project_dirty and len(main.menu.actions())==2 and main.project_music_style['era']=='1950s' and main.project_music_style['genre']=='Ragtime' and main.project_music_style['music_mode']=='instrumental'
  main.title.setText('Edited')
  with patch.object(Q.QMessageBox,'question',return_value=Q.QMessageBox.Cancel):main.open_project(str(path))
  assert main.title.text()=='Edited'
+ from project_bundle import save_project
+ main.project_music_style.update(music_mode='lyrics',voice='Female lead',language='English',topic='Whalom Park',lyrics='[Verse]\nSummer memories',details='Warm piano and brass')
+ vocalpath=new_project_path(root,'Vocal project');save_project(vocalpath,main.project_snapshot());main.project_music_style={};main.project_dirty=False;main.open_project(str(vocalpath))
+ assert main.project_music_style['music_mode']=='lyrics' and main.project_music_style['voice']=='Female lead' and main.project_music_style['lyrics']=='[Verse]\nSummer memories' and main.project_music_style['details']=='Warm piano and brass'
  main.project_dirty=False;main.close();qt.processEvents()
  print('Project menu, async save, full UI restoration, portable media paths, blank captions, clip mute, dirty tracking and Cancel preservation passed.')
