@@ -1,4 +1,4 @@
-STEREO SLIDESHOW — PERMANENT INSTALLATION — v0.30
+STEREO SLIDESHOW — PERMANENT INSTALLATION — v0.31
 
 FIRST INSTALL OR ONE-TIME UPDATE FROM AN OLDER VERSION
 1. Quit Stereo Slideshow if it is open.
@@ -67,3 +67,9 @@ Choose Download update, then Install and restart. Save your project when asked.
 Your settings and existing app icon are retained. The updater cleans up its
 own download. You can delete this downloaded ZIP and its extracted folder once
 the installed app opens successfully. Keep the permanent Applications folder.
+
+WINDOWS — EXPERIMENTAL / UNTESTED
+See Development/WINDOWS_README.md. Install 64-bit Python and FFmpeg first,
+then double-click Development/Install-Windows.cmd. This source-installer
+edition has not been run on an actual Windows PC. No standalone EXE/MSI is
+included. The Mac installer is not the Windows installer.

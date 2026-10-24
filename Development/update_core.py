@@ -2,6 +2,7 @@
 import json,re,shutil,stat,subprocess,sys,tempfile,urllib.request,zipfile
 from pathlib import Path,PurePosixPath
 from install_support import ID,verify_package
+from platform_support import background_options
 REPO='TedInVR/StereoSlideshow'
 HOSTS={'api.github.com','github.com','codeload.github.com','raw.githubusercontent.com'}
 LIMIT=100*1024*1024
@@ -105,7 +106,7 @@ def launch_installer(root,download,pid):
     root=Path(root);job=Path(download['job']);package=Path(download['package'])
     if job.parent.resolve()!=(root/'Updates').resolve() or package.parent.resolve()!=job.resolve():raise ValueError('Unexpected update staging folder.')
     validate(package,download['version'])
-    for name in ['update_apply.py','update_core.py','install_support.py']:shutil.copy2(root/'Development'/name,job/name)
+    for name in ['update_apply.py','update_core.py','install_support.py','platform_support.py']:shutil.copy2(root/'Development'/name,job/name)
     log=root/'Logs/update.log';log.parent.mkdir(parents=True,exist_ok=True)
     with log.open('a') as output:
-        subprocess.Popen([sys.executable,str(job/'update_apply.py'),'--target',str(root),'--package',str(package),'--pid',str(pid)],stdout=output,stderr=output,start_new_session=True)
+        subprocess.Popen([sys.executable,str(job/'update_apply.py'),'--target',str(root),'--package',str(package),'--pid',str(pid)],stdout=output,stderr=output,**background_options())

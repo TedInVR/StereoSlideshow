@@ -1,5 +1,6 @@
 import os, math, subprocess, tempfile, shutil, json
 from pathlib import Path
+from platform_support import quiet_options
 from timing import make_plan, TimingError
 from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageFilter, ImageEnhance
 
@@ -32,12 +33,12 @@ def check_photo(path):
 def binary(name):
     for p in [shutil.which(name), '/opt/homebrew/bin/'+name, '/usr/local/bin/'+name]:
         if p and os.path.isfile(p): return p
-    raise RuntimeError('FFmpeg is missing. Install Homebrew FFmpeg, then try again.')
+    raise RuntimeError('FFmpeg is missing. Install FFmpeg and make ffmpeg/ffprobe available on PATH, then restart the app.')
 
 def run(args, cancel, message='A video or audio processing step failed. See the saved details for the affected file.'):
-    if Path(args[0]).name=='ffmpeg':args=[args[0],'-hide_banner','-loglevel','error','-nostats']+args[1:]
+    if Path(args[0]).stem=='ffmpeg':args=[args[0],'-hide_banner','-loglevel','error','-nostats']+args[1:]
     with tempfile.TemporaryFile() as log:
-        p=subprocess.Popen(args, stdout=log, stderr=log)
+        p=subprocess.Popen(args, stdout=log, stderr=log,**quiet_options())
         while p.poll() is None:
             if cancel.wait(.15):
                 p.kill(); p.wait(); raise Cancelled()
@@ -88,7 +89,7 @@ class VideoReader:
         order='[r][l]' if cfg.get('video_cross',False) else '[l][r]'
         filt=f"[0:{info['stream']}]setpts=PTS-STARTPTS,fps={fps},split=2[a][b];[a]crop=iw/2:ih:0:0,{eye}[l];[b]crop=iw/2:ih:iw/2:0,{eye}[r];{order}hstack=inputs=2,format=rgb24[v]"
         self.log=tempfile.TemporaryFile();self.size=w*2*h*3;self.dims=(w*2,h);self.last=None
-        self.proc=subprocess.Popen([binary('ffmpeg'),'-v','error','-threads','2','-i',path,'-filter_complex_threads','1','-filter_complex',filt,'-map','[v]','-an','-f','rawvideo','-pix_fmt','rgb24','pipe:1'],stdout=subprocess.PIPE,stderr=self.log)
+        self.proc=subprocess.Popen([binary('ffmpeg'),'-v','error','-threads','2','-i',path,'-filter_complex_threads','1','-filter_complex',filt,'-map','[v]','-an','-f','rawvideo','-pix_fmt','rgb24','pipe:1'],stdout=subprocess.PIPE,stderr=self.log,**quiet_options())
     def frame(self,allow_last=False):
         data=self.proc.stdout.read(self.size)
         if len(data)!=self.size:
@@ -100,7 +101,7 @@ class VideoReader:
         self.proc.wait();self.proc.stdout.close();self.log.close()
 
 def font(size):
-    for f in ['/System/Library/Fonts/Supplemental/Arial.ttf','/System/Library/Fonts/Helvetica.ttc','/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf']:
+    for f in [str(Path(os.environ.get('WINDIR','C:/Windows'))/'Fonts/arial.ttf'),str(Path(os.environ.get('WINDIR','C:/Windows'))/'Fonts/segoeui.ttf'),'/System/Library/Fonts/Supplemental/Arial.ttf','/System/Library/Fonts/Helvetica.ttc','/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf']:
         if os.path.isfile(f): return ImageFont.truetype(f,size)
     return ImageFont.load_default(size=size)
 
@@ -276,7 +277,7 @@ def render(images,audio,out,cfg,progress,cancel):
         master=Path(td)/'master.mp4'; cmd=[ff,'-hide_banner','-loglevel','error','-nostats','-y','-f','rawvideo','-pix_fmt','rgb24','-s',f'{w*2}x{h}','-r',str(fps),'-i','pipe:0']
         cmd+=['-t',str(total),'-vf','setsar=1','-c:v','libx264','-preset',('ultrafast' if cfg.get('preview') else 'veryfast'),'-crf',('28' if cfg.get('preview') else '18'),'-pix_fmt','yuv420p','-movflags','+faststart',str(master)]
         with tempfile.TemporaryFile() as log:
-            p=subprocess.Popen(cmd,stdin=subprocess.PIPE,stdout=log,stderr=log)
+            p=subprocess.Popen(cmd,stdin=subprocess.PIPE,stdout=log,stderr=log,**quiet_options())
             reader=None; current_item=-1; last_content_frame=None; subtitle=None
             try:
                 blank=Image.new('RGB',(w*2,h),bg)

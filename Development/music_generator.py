@@ -1,6 +1,7 @@
 """Local ACE-Step REST integration and exact-length soundtrack assembly."""
 import json, math, os, platform, shutil, signal, subprocess, time, urllib.request, urllib.error, urllib.parse
 from pathlib import Path
+from platform_support import background_options,quiet_options
 from engine import binary,music_duration
 
 ERAS=['Any era','1920s','1930s','1940s','1950s','1960s','1970s','1980s','1990s','2000s','Modern']
@@ -129,7 +130,7 @@ def launch_command(folder,port):
     args=['--host','127.0.0.1','--port',str(port)]
     # Portable ACE-Step distributions use both spellings. A copied .venv
     # may contain dangling links to the packager's machine; is_file skips them.
-    candidates=['.venv/bin/python','.venv/bin/python3','venv/bin/python']
+    candidates=(['.venv/Scripts/python.exe','venv/Scripts/python.exe','python_embeded/python.exe','python_embedded/python.exe'] if platform.system()=='Windows' else [])+['.venv/bin/python','.venv/bin/python3','venv/bin/python']
     for directory in ['python_embeded','python_embedded']:
         candidates.extend(f'{directory}/bin/{name}' for name in ['python3.11','python3','python'])
     for relative in candidates:
@@ -155,7 +156,7 @@ class LocalServer:
         if need_lm:env['ACESTEP_INIT_LLM']='true'
         if model:env['ACESTEP_CONFIG_PATH']=model
         if platform.system()=='Darwin' and platform.machine()=='arm64':env['ACESTEP_LM_BACKEND']='mlx'
-        self.process=subprocess.Popen(command,cwd=root,env=env,stdin=subprocess.DEVNULL,stdout=self.log,stderr=subprocess.STDOUT,start_new_session=True)
+        self.process=subprocess.Popen(command,cwd=root,env=env,stdin=subprocess.DEVNULL,stdout=self.log,stderr=subprocess.STDOUT,**background_options())
         deadline=time.monotonic()+900
         while time.monotonic()<deadline:
             check_cancel(cancel)
@@ -167,11 +168,15 @@ class LocalServer:
         raise MusicError('ACE-Step did not become ready within 15 minutes. See Logs/music_generator_server.log.')
     def stop(self):
         if self.process is not None and self.process.poll() is None:
-            try:os.killpg(self.process.pid,signal.SIGTERM)
+            try:
+                if platform.system()=='Windows':self.process.terminate()
+                else:os.killpg(self.process.pid,signal.SIGTERM)
             except ProcessLookupError:pass
             try:self.process.wait(5)
             except subprocess.TimeoutExpired:
-                try:os.killpg(self.process.pid,signal.SIGKILL)
+                try:
+                    if platform.system()=='Windows':self.process.kill()
+                    else:os.killpg(self.process.pid,signal.SIGKILL)
                 except ProcessLookupError:pass
                 self.process.wait()
         if self.log:self.log.close()
@@ -179,7 +184,7 @@ class LocalServer:
 def run_ffmpeg(command,cancel):
     import tempfile
     with tempfile.TemporaryFile() as errors:
-        process=subprocess.Popen(command,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=errors)
+        process=subprocess.Popen(command,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=errors,**quiet_options())
         try:
             while process.poll() is None:
                 if cancel.wait(.1):raise MusicCancelled()

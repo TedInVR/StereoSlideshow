@@ -1,3 +1,21 @@
+VERSION 0.31 — EXPERIMENTAL WINDOWS SOURCE INSTALLER
+
+Adds Development/Install-Windows.cmd, a per-user installer, windowed launcher,
+Desktop/Start menu shortcuts and Windows installation/reporting documentation.
+Shared renderer uses Windows fonts and suppresses encoder console windows.
+Secure credentials select Windows Credential Manager with no plaintext fallback.
+Runtime, update waiting/restart and ACE-Step interpreter/process paths gain
+Windows branches. Windows never uses POSIX os.kill(pid,0) to test a process.
+
+WINDOWS STATUS: EXPERIMENTAL / UNTESTED ON WINDOWS HARDWARE.
+No standalone EXE/MSI or bundled Python is provided. Users need 64-bit Python
+and FFmpeg/FFprobe on PATH. ACE-Step is optional and separately installed.
+Simulation and shared-engine tests pass in a non-Windows environment; this
+is not evidence of a successful Windows installation or real-device operation.
+Mac and Windows editions remain in the same public GitHub repository.
+All new installer files live under Development, preserving compatibility with
+the allowlist in previously installed Mac updaters. Account files stay excluded.
+
 VERSION 0.30 — MACOS APPLICATION NAME
 
 Sets the process-local Cocoa application name and main-bundle display names

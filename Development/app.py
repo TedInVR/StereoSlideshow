@@ -77,7 +77,7 @@ class Window(ProjectMixin,Q.QWidget):
         setup_action=help_menu.addAction('Guided YouTube Setup…');setup_action.triggered.connect(self.setup_youtube)
         guide_action=help_menu.addAction('User Guide…');guide_action.triggered.connect(self.show_guide)
         walkthrough_action=help_menu.addAction('Guided Walkthrough…');walkthrough_action.triggered.connect(self.guided_walkthrough)
-        heading=Q.QLabel('Stereo Slideshow'); heading.setStyleSheet('font-size:26px;font-weight:600'); layout.addWidget(heading)
+        heading=Q.QLabel('Stereo Slideshow'+(' — Experimental Windows version' if sys.platform=='win32' else '')); heading.setStyleSheet('font-size:26px;font-weight:600'); layout.addWidget(heading)
         columns=Q.QSplitter(QtCore.Qt.Horizontal);layout.addWidget(columns,1)
         left=Q.QWidget();left_layout=Q.QVBoxLayout(left);left_layout.setContentsMargins(0,0,8,0);columns.addWidget(left)
         right=Q.QWidget();right_layout=Q.QVBoxLayout(right);right_layout.setContentsMargins(0,0,0,0);columns.addWidget(right)

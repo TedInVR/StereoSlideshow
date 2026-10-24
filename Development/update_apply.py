@@ -3,6 +3,7 @@ import argparse,json,os,shutil,subprocess,sys,tempfile,time
 from pathlib import Path
 from install_support import recognized,install_payload,atomic_copy,ensure_runtime,check_running
 from update_core import validate
+from platform_support import runtime_python,windows_process_exited,reopen
 
 def apply_update(package,target):
     package=Path(package).resolve();target=Path(target).resolve()
@@ -22,7 +23,7 @@ def apply_update(package,target):
         try:
             old_requirements=target/'Development/requirements.txt'
             if not old_requirements.exists() or old_requirements.read_bytes()!=(package/'Development/requirements.txt').read_bytes():
-                python=target/'Runtime/venv/bin/python'
+                python=runtime_python(target)
                 subprocess.run([str(python),'-m','pip','install','-r',str(package/'Development/requirements.txt')],check=True)
             install_payload(package,target,manifest);ensure_runtime(target,Path.home());validate(target)
         except BaseException:
@@ -34,6 +35,9 @@ def apply_update(package,target):
 
 def wait_for_exit(pid,timeout=120):
     if pid<=1:raise RuntimeError('Invalid app process identifier.')
+    if sys.platform=='win32':
+        if windows_process_exited(pid,round(timeout*1000)):return
+        raise RuntimeError('Stereo Slideshow did not close. No program files were changed.')
     deadline=time.monotonic()+timeout
     while time.monotonic()<deadline:
         try:os.kill(pid,0)
@@ -53,11 +57,14 @@ def main():
     except Exception as error:
         message='Stereo Slideshow could not finish updating. '+str(error)[:350]+'\nDetails: '+str(args.target/'Logs/update.log')
         print(message,flush=True)
+        if sys.platform=='win32':
+            import ctypes
+            ctypes.windll.user32.MessageBoxW(None,message,'Stereo Slideshow update',0x10)
         if sys.platform=='darwin':subprocess.run(['/usr/bin/osascript','-e','on run argv','-e','display dialog (item 1 of argv) buttons {"OK"} default button "OK" with title "Stereo Slideshow update"','-e','end run',message],check=False)
     finally:
         shutil.rmtree(job,ignore_errors=True)
     # Reopen the new version, or the restored previous version after a failed update.
-    if exited and sys.platform=='darwin':subprocess.run(['/usr/bin/open','-n',str(args.target/'Stereo Slideshow.app')],check=False)
+    if exited:reopen(args.target)
     return 0 if success else 1
 
 if __name__=='__main__':sys.exit(main())

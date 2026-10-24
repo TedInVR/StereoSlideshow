@@ -43,7 +43,7 @@ class YouTubeSetup(Q.QWizard):
         self.project=Q.QLineEdit(saved.get('project_id',''));self.project.setPlaceholderText('Optional, for example stereo-slideshow-123456');self.project.setMaxLength(30)
         self.pages=[];self._building=True
         p=self.add_step('Welcome — connect your own YouTube channel','Step 1 of 8 · We will guide you through each Google screen.')
-        p.text('This connects only your own YouTube account. Nothing is uploaded during setup. Your Google password is entered only on Google’s website; renewable authorization is kept in your Mac’s Keychain.')
+        p.text('This connects only your own YouTube account. Nothing is uploaded during setup. Your Google password is entered only on Google’s website; renewable authorization is kept in macOS Keychain or Windows Credential Manager.')
         p.text('There are two places involved:\n• Your browser: Google’s setup pages and sign-in screens.\n• This Stereo Slideshow Mac application: this guide and the final connection button.\n\nUse Command–Tab or the Dock to switch back to this app after each browser step. This guide stays open while you work in the browser.')
         p.text('For this version, you create a Google project and download a small Desktop client JSON file once. The screens below show what to click and what to enter. You may stop and return later. Rendering and music generation do not need this connection.')
         self.resume_button=p.button('Resume where I stopped',lambda:self.jump(self.resume_step));self.resume_step=max(0,min(7,int(saved.get('step',0)))) if str(saved.get('step',0)).isdigit() else 0;self.resume_button.setEnabled(self.resume_step>0)

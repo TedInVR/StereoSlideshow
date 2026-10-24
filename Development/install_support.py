@@ -1,6 +1,7 @@
 """Install/update one permanent Stereo Slideshow project; no admin prompt required."""
 import argparse, hashlib, json, os, plistlib, shutil, subprocess, sys, tempfile, time, zipfile
 from pathlib import Path
+from platform_support import runtime_python,windows_process_exited,quiet_options
 ID='com.ted.stereoslideshow'
 NAME='Stereo Slideshow'
 MARKER='project.json'
@@ -31,6 +32,11 @@ def verify_package(package):
     return manifest
 
 def check_running(target,home):
+    if sys.platform=='win32':
+        try:pid=int(json.loads((target/'Runtime/running.json').read_text())['pid'])
+        except (OSError,ValueError,KeyError):return
+        if pid>0 and not windows_process_exited(pid):raise RuntimeError('Close Stereo Slideshow before updating.')
+        return
     try:
         pid=int(json.loads((target/'Runtime/running.json').read_text())['pid'])
         command=subprocess.check_output(['ps','-p',str(pid),'-o','command='],text=True).strip()
@@ -65,7 +71,7 @@ def runtime_ok(python,full=True):
     return subprocess.run([str(python),'-c',check],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0
 
 def ensure_runtime(target,home):
-    env=target/'Runtime/venv';python=env/'bin/python'
+    env=target/'Runtime/venv';python=runtime_python(target)
     if runtime_ok(python):print('Existing runtime is ready.');return
     if runtime_ok(python,full=False):
         print('Updating app dependencies in the existing runtime…')
@@ -73,7 +79,7 @@ def ensure_runtime(target,home):
         if not runtime_ok(python):raise RuntimeError('The updated runtime could not be verified. Please share the installer output.')
         return
     legacy=home/'Library/Application Support/Stereo Slideshow/venv'
-    if not env.exists() and runtime_ok(legacy/'bin/python'):
+    if sys.platform!='win32' and not env.exists() and runtime_ok(legacy/'bin/python'):
         print('Copying the existing runtime into the permanent folder…')
         shutil.copytree(legacy,env,symlinks=True)
         if runtime_ok(python):return

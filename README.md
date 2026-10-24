@@ -1,9 +1,31 @@
 # Stereo Slideshow
 
-A macOS desktop app for making stereoscopic photo/video slideshows, with
+A macOS app, with an **experimental Windows source-installer edition**, for
+making stereoscopic photo/video slideshows, with
 ordered music tracks, stereo captions, animated photos, titles and fades.
 Exports full side-by-side MP4, red/cyan anaglyph MP4, and an optional
-YouTube compatibility MKV. Version 0.30.
+YouTube compatibility MKV. Version 0.31.
+
+## Platforms
+
+| Platform | Status | Installation |
+| --- | --- | --- |
+| macOS | Main edition; tested in use by its creator | Install or Update.command; later updates from Help |
+| Windows 10/11, 64-bit | **Experimental — not tested on a Windows computer** | Development/Install-Windows.cmd; Python and FFmpeg required |
+
+### Windows: experimental / untested
+
+[Read the Windows installation guide](Development/WINDOWS_README.md).
+Download this repository with **Code → Download ZIP**, extract it, then open
+**Development → Install-Windows.cmd**. Install 64-bit Python and FFmpeg first
+as described in the guide. The installer creates Desktop/Start menu shortcuts
+and installs per user. It is a source installer, **not a standalone EXE/MSI**.
+
+The interface, renderer, preview and project code are shared with the Mac edition.
+Windows-specific launcher, credentials, updater/restart and optional ACE-Step
+paths are implemented but have **not been verified on Windows**. Community bug
+reports are welcome through [Issues](https://github.com/TedInVR/StereoSlideshow/issues).
+No developer Google credentials or personal account files are distributed.
 
 ## First installation or updating an older copy
 

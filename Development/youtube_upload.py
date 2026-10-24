@@ -10,6 +10,7 @@ from pathlib import Path
 from fractions import Fraction
 from engine import binary
 from music_generator import run_ffmpeg
+from platform_support import quiet_options
 
 SCOPES=['https://www.googleapis.com/auth/youtube.upload','https://www.googleapis.com/auth/youtube.readonly']
 AUTH='https://accounts.google.com/o/oauth2/v2/auth'
@@ -49,20 +50,23 @@ class CredentialStore:
     def _keyring(self):
         try:
             import sys
-            if sys.platform!='darwin':raise YouTubeError('YouTube account connection requires macOS Keychain. No credentials were saved.')
-            from keyring.backends.macOS import Keyring
+            if sys.platform=='darwin':
+                from keyring.backends.macOS import Keyring
+            elif sys.platform=='win32':
+                from keyring.backends.Windows import WinVaultKeyring as Keyring
+            else:raise YouTubeError('Secure YouTube account storage is supported on macOS and Windows only. No credentials were saved.')
             return Keyring()
-        except ImportError as error:raise YouTubeError('Run Install or Update.command to install Keychain support for YouTube.') from error
+        except ImportError as error:raise YouTubeError('Run the installer to install secure YouTube credential storage support.') from error
     def load(self):
         try:
             text=self._keyring().get_password(SERVICE,'account')
             return json.loads(text) if text else None
         except YouTubeError:raise
-        except Exception as error:raise YouTubeError('Could not read the YouTube connection from Keychain. Unlock your login Keychain and try again.') from error
+        except Exception as error:raise YouTubeError('Could not read the YouTube connection from secure system credential storage. Unlock your account and try again.') from error
     def save(self,value):
         try:self._keyring().set_password(SERVICE,'account',json.dumps(value))
         except YouTubeError:raise
-        except Exception as error:raise YouTubeError('Could not save the YouTube connection securely in Keychain.') from error
+        except Exception as error:raise YouTubeError('Could not save the YouTube connection in secure system credential storage.') from error
     def delete(self):
         keyring=self._keyring()
         if keyring.get_password(SERVICE,'account') is not None:keyring.delete_password(SERVICE,'account')
@@ -233,7 +237,7 @@ def prepare_stereo(source,directory,cancel,status,half=False):
     if source.suffix.lower() not in ('.mp4','.mkv','.mov','.m4v'):raise YouTubeError('Select a rectangular left/right side-by-side MP4, MOV or MKV. VR180 and anaglyph uploads are not handled by this uploader yet.')
     check(cancel);status('Preparing a tagged 3D upload copy (video and audio are copied)…')
     try:
-        data=json.loads(subprocess.check_output([binary('ffprobe'),'-v','error','-select_streams','v:0','-show_entries','stream=width,height,sample_aspect_ratio:stream_tags=stereo_mode','-of','json',str(source)],timeout=30))
+        data=json.loads(subprocess.check_output([binary('ffprobe'),'-v','error','-select_streams','v:0','-show_entries','stream=width,height,sample_aspect_ratio:stream_tags=stereo_mode','-of','json',str(source)],timeout=30,**quiet_options()))
         stream=data['streams'][0];sar=stream.get('sample_aspect_ratio','1:1');sar=Fraction(sar.replace(':','/')) if sar not in ('N/A','0:1') else Fraction(1)
         tagged=stream.get('tags',{}).get('stereo_mode')=='left_right' and sar!=1
         aspect=Fraction(stream['width'],stream['height'])*sar/(1 if half or tagged else 2)
@@ -241,6 +245,6 @@ def prepare_stereo(source,directory,cancel,status,half=False):
     dest=Path(directory)/'YouTube stereo upload.mkv'
     run_ffmpeg([binary('ffmpeg'),'-v','error','-y','-i',str(source),'-map','0:v:0','-map','0:a:0?','-c','copy','-aspect',f'{aspect.numerator}:{aspect.denominator}','-metadata:s:v:0','stereo_mode=1',str(dest)],cancel)
     check(cancel)
-    probe=json.loads(subprocess.check_output([binary('ffprobe'),'-v','error','-select_streams','v:0','-show_entries','stream_tags=stereo_mode','-of','json',str(dest)],timeout=30))
+    probe=json.loads(subprocess.check_output([binary('ffprobe'),'-v','error','-select_streams','v:0','-show_entries','stream_tags=stereo_mode','-of','json',str(dest)],timeout=30,**quiet_options()))
     if probe.get('streams',[{}])[0].get('tags',{}).get('stereo_mode')!='left_right':raise YouTubeError('The upload copy could not be verified as left/right stereo. It has not been uploaded.')
     return dest
