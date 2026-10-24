@@ -1,3 +1,26 @@
+VERSION 0.29 — UPDATES FROM THE HELP MENU
+
+Help > Check for Updates checks the public TedInVR/StereoSlideshow GitHub
+project. Download update fetches a commit-pinned archive into the installed
+app's Updates folder, checks all manifest hashes and rejects unsafe paths.
+Install and restart is a separate explicit action, with a save-project prompt
+for unsaved work. The detached installer waits for app exit, backs up and
+replaces program files in place, preserving settings and the stable app icon.
+Successful installation restarts the app and removes the staged download.
+Cancelled or rejected downloads are cleaned up without using Downloads.
+Interrupted program-file installation restores overwritten program files.
+Diagnostics go to Logs/update.log. No Google account details are transmitted.
+
+Install this version manually once to add the updater. Future published version
+bumps can be installed through Help, without unzipping installer downloads.
+Checking never installs automatically. First-time installations still use the
+full package; an offline/manual installer remains available for recovery.
+
+Validated version comparison, commit pinning, transport URL boundaries, archive
+and checksum rejection, data preservation, stable bundle, rollback, cancellation,
+unsaved-project Cancel and installer handoff in a real separate process.
+Actual GitHub downloading and macOS restart still need a real-device check.
+
 VERSION 0.28 — PREVIEW, WATCH, THEN UPLOAD
 
 Removed the automatic YouTube upload checkbox and its queued-upload code.

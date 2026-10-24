@@ -69,6 +69,7 @@ class Window(ProjectMixin,Q.QWidget):
         self.menu=Q.QMenuBar(self);self.menu.setNativeMenuBar(True);layout.setMenuBar(self.menu)
         file_menu=self.menu.addMenu('File')
         help_menu=self.menu.addMenu('Help')
+        help_menu.addAction('Check for Updates…',self.check_for_updates)
         folder_action=help_menu.addAction('Open Stereo Slideshow Folder');folder_action.triggered.connect(lambda:QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(ROOT))))
         setup_action=help_menu.addAction('Guided YouTube Setup…');setup_action.triggered.connect(self.setup_youtube)
         guide_action=help_menu.addAction('User Guide…');guide_action.triggered.connect(self.show_guide)
@@ -171,6 +172,10 @@ class Window(ProjectMixin,Q.QWidget):
         self.watch=Q.QPushButton('Watch finished video');self.watch.setEnabled(False);self.watch.clicked.connect(self.watch_finished);groups['export'].addRow(self.watch)
         self.upload_button=Q.QPushButton('Upload finished video to YouTube…');self.upload_button.clicked.connect(self.upload_youtube);groups['export'].addRow(self.upload_button)
         note=Q.QLabel('Watch your finished video first. Uploading is a separate step and only starts when you click Upload in the YouTube window.');note.setWordWrap(True);groups['export'].addRow(note)
+    def check_for_updates(self):
+        if self.project_busy():self.status.setText('Finish the current operation before checking for updates.');return
+        from update_dialog import UpdateDialog
+        dialog=UpdateDialog(self);dialog.exec()
     def setup_youtube(self):
         from youtube_dialog import YouTubeDialog
         dialog=YouTubeDialog(self,title=self.title.text());QtCore.QTimer.singleShot(0,dialog.setup_guide);dialog.exec()
@@ -441,12 +446,18 @@ class Window(ProjectMixin,Q.QWidget):
         if self.worker and self.worker.isRunning():self.cancel();e.ignore();return
         if self.project_worker is not None and self.project_worker.isRunning():
             self.project_worker.cancel.set();e.ignore();return
-        if not self.project_can_replace(self.close):e.ignore();return
+        if not getattr(self,'pending_app_update',None) and not self.project_can_replace(self.close):e.ignore();return
         if self.worker and self.worker.isRunning(): self.cancel(); e.ignore()
         else:
             if self.probe is not None and self.probe.isRunning():
                 self.probe.cancel.set()
                 if not self.probe.wait(2000):e.ignore();return
+            if getattr(self,'pending_app_update',None):
+                try:
+                    from update_core import launch_installer
+                    launch_installer(ROOT,self.pending_app_update,os.getpid());self.pending_app_update=None
+                except Exception as error:
+                    Q.QMessageBox.warning(self,'Update could not start',str(error)[:400]);e.ignore();return
             e.accept()
 class Application(Q.QApplication):
     def event(self,e):

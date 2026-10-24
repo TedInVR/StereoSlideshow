@@ -3,15 +3,25 @@
 A macOS desktop app for making stereoscopic photo/video slideshows, with
 ordered music tracks, stereo captions, animated photos, titles and fades.
 Exports full side-by-side MP4, red/cyan anaglyph MP4, and an optional
-YouTube compatibility MKV. Version 0.28.
+YouTube compatibility MKV. Version 0.29.
 
-## Install or update on a Mac
+## First installation or updating an older copy
 
 1. Quit Stereo Slideshow.
 2. Download this repository with **Code → Download ZIP**, then extract it.
 3. Double-click **Install or Update.command** inside the extracted folder.
-4. Open your permanent Stereo Slideshow app in Applications. Keep using its
-   existing icon after updates. The installer carries forward preferences.
+4. Open your permanent Stereo Slideshow app in Applications. Keep its existing
+   icon. After confirming it opens, delete the ZIP and extracted download folder.
+
+## Normal updates (version 0.29 onward)
+
+Choose **Help → Check for Updates…** in the installed app. If a newer version
+is available, click **Download update**, then **Install and restart**. Save your
+project when asked. The updater downloads into the app's Updates folder, verifies
+file hashes, waits for the app to close, installs and reopens it. It keeps your
+settings and existing app icon and cleans up its download automatically. Checking
+never installs on its own. If installation fails, program-file changes are rolled
+back; see Logs/update.log. Do not remove the permanent Applications folder.
 
 Python 3.9–3.14 is required. FFmpeg and ffprobe must also be installed (for example, with Homebrew: `brew install ffmpeg`). The installer sets up the Python runtime and app dependencies; follow any messages it displays. The application is
 currently unsigned. If macOS blocks the launcher, use Finder's Open command
@@ -198,3 +208,12 @@ After the final render, use **Watch finished video**. When satisfied, choose
 **Upload finished video to YouTube…**, review the details and click Upload.
 There is no upload-after-render option. The existing uploader still prepares a
 tagged MKV; MP4 stereo metadata handling is unchanged by this update.
+
+## Publishing updates
+
+Bump project.json, app_paths.VERSION and the app bundle versions; update the guide
+and release notes. Run tools/package_release.py to regenerate manifest.json,
+validate the checksums/tests, and publish those public files together on GitHub
+main. The in-app updater pins that commit and verifies its manifest. A new ZIP
+is needed only for first-time/manual installation, not for existing users.
+Never commit Settings, Runtime, tokens, client JSON, generated music or media.
