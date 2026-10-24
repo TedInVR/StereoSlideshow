@@ -1,3 +1,16 @@
+VERSION 0.30 — MACOS APPLICATION NAME
+
+Sets the process-local Cocoa application name and main-bundle display names
+before importing Qt, then sets the Qt application name before creating the
+application. Addresses the native menu showing Python instead of Stereo
+Slideshow when hosted by framework Python. No system Python files, stored
+credentials or bundle identifiers are changed. No extra dependency is needed.
+Naming failures are nonfatal and recorded in the normal app log.
+
+Install through Help > Check for Updates in version 0.29 or newer.
+Validated startup ordering, platform guard, failure fallback, updater and
+main-window regression checks. Actual macOS menu display needs a device check.
+
 VERSION 0.29 — UPDATES FROM THE HELP MENU
 
 Help > Check for Updates checks the public TedInVR/StereoSlideshow GitHub

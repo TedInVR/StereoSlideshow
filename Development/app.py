@@ -1,5 +1,8 @@
 import sys, os, json, threading, traceback, datetime, tempfile
 from pathlib import Path
+if __name__=='__main__':
+    from mac_identity import configure_macos_identity
+    configure_macos_identity()
 from PySide6 import QtCore, QtGui, QtWidgets as Q
 from engine import render, Cancelled, RenderError, VIDEO_EXT
 from timing import make_plan, describe_plan, TimingError, format_time
@@ -464,7 +467,9 @@ class Application(Q.QApplication):
         if e.type()==QtCore.QEvent.FileOpen and hasattr(self,'window'): self.window.add([e.file()]); return True
         return super().event(e)
 if __name__=='__main__':
-    app=Application(sys.argv);app.setApplicationName('Stereo Slideshow');app.setApplicationDisplayName('Stereo Slideshow');app.setOrganizationName('Ted Witten')
+    QtCore.QCoreApplication.setApplicationName('Stereo Slideshow');QtCore.QCoreApplication.setOrganizationName('Ted Witten')
+    Application.setApplicationDisplayName('Stereo Slideshow')
+    app=Application(sys.argv)
     if ICON.is_file():app.setWindowIcon(QtGui.QIcon(str(ICON)))
     (ROOT/'Runtime').mkdir(parents=True,exist_ok=True)
     lock=QtCore.QLockFile(str(ROOT/'Runtime'/'app.lock'));lock.setStaleLockTime(0)
