@@ -1,4 +1,4 @@
-STEREO SLIDESHOW — PERMANENT INSTALLATION — v0.24
+STEREO SLIDESHOW — PERMANENT INSTALLATION — v0.25
 
 FIRST INSTALL OR UPDATE
 1. Quit Stereo Slideshow if it is open.
@@ -55,12 +55,10 @@ requires working Python 3.9–3.14 and FFmpeg/FFprobe, as before. Internet is
 needed only when dependencies must be installed. No administrator password
 is requested by this installer.
 
-NEW IN v0.24
-Upload finished SBS videos to your own YouTube channel.
-Editable title, description template, tags, visibility and audience controls.
-Optional automatic upload after one successful render; resets afterward.
-First use requires your own Google Desktop OAuth client and channel connection.
-See Help > User guide > YouTube upload for step-by-step Google setup.
-No credentials are bundled. Test with Private visibility before public uploads.
-Existing audio editing, project saving, permanent icon and exports are retained.
-VR180 cinema is the next phase, not included in this update.
+NEW IN v0.25
+Help > Guided YouTube Setup walks through each Google page, one step at a time.
+Open the right pages, copy required permissions, save your place and resume.
+Already have the JSON? Skip straight to selecting it and connecting.
+Existing YouTube connections and personal settings are preserved.
+A shared verified Google app for simpler public-user connection is a future task.
+No personal Google configuration, tokens or guide progress are bundled.

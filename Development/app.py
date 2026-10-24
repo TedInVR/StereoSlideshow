@@ -70,6 +70,7 @@ class Window(ProjectMixin,Q.QWidget):
         file_menu=self.menu.addMenu('File')
         help_menu=self.menu.addMenu('Help')
         folder_action=help_menu.addAction('Open Stereo Slideshow Folder');folder_action.triggered.connect(lambda:QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(ROOT))))
+        setup_action=help_menu.addAction('Guided YouTube Setup…');setup_action.triggered.connect(self.setup_youtube)
         guide_action=help_menu.addAction('User Guide…');guide_action.triggered.connect(self.show_guide)
         walkthrough_action=help_menu.addAction('Guided Walkthrough…');walkthrough_action.triggered.connect(self.guided_walkthrough)
         heading=Q.QLabel('Stereo Slideshow'); heading.setStyleSheet('font-size:26px;font-weight:600'); layout.addWidget(heading)
@@ -167,6 +168,9 @@ class Window(ProjectMixin,Q.QWidget):
         self.upload_after=Q.QCheckBox('Upload to YouTube after this render (also creates Full-SBS)');self.upload_after.setChecked(False);groups['export'].addRow(self.upload_after)
         upload_button=Q.QPushButton('YouTube account, template and upload…');upload_button.clicked.connect(self.upload_youtube);groups['export'].addRow(upload_button)
         self.pending_upload=None
+    def setup_youtube(self):
+        from youtube_dialog import YouTubeDialog
+        dialog=YouTubeDialog(self,title=self.title.text());QtCore.QTimer.singleShot(0,dialog.setup_guide);dialog.exec()
     def upload_youtube(self):
         from youtube_dialog import YouTubeDialog
         source=next((path for path in getattr(self,'last_exports',[]) if '_Full_SBS_' in Path(path).name and Path(path).suffix.lower()=='.mp4'),'')

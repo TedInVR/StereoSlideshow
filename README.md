@@ -3,7 +3,7 @@
 A macOS desktop app for making stereoscopic photo/video slideshows, with
 ordered music tracks, stereo captions, animated photos, titles and fades.
 Exports full side-by-side MP4, red/cyan anaglyph MP4, and an optional
-YouTube compatibility MKV. Version 0.24.
+YouTube compatibility MKV. Version 0.25.
 
 ## Install or update on a Mac
 
@@ -144,3 +144,16 @@ session. Closing/restarting the app does not resume an unfinished upload.
 The offline OAuth/protocol and UI tests use simulated Google responses; actual
 Mac sign-in, Keychain access and a Private test upload still need validation.
 VR180 cinema and immersive footage are the next phase, not part of v0.24.
+
+## Guided YouTube setup
+
+**Help → Guided YouTube Setup…** provides eight resumable steps with Google
+page links, exact field instructions, copyable scopes, JSON validation and a
+handoff to the existing account connection. The uploader also offers the guide;
+Connect opens it when no Desktop client is configured. Already-downloaded JSON
+can skip directly to connection. Existing connections are kept.
+
+Google-side actions remain manual. Progress checkboxes record what the user
+completed, without claiming API verification. Local progress and credentials
+are excluded from releases. A shared verified developer registration for a
+simpler public-user Connect flow is not included in this release.

@@ -1,3 +1,32 @@
+VERSION 0.25 — GUIDED YOUTUBE SETUP
+
+Eight-page in-app walkthrough: project, API enablement, consent configuration,
+test users, scopes, Desktop client/download, app return/file selection/sign-in.
+Google page buttons, optional project-ID links, copyable app name/scopes,
+completion markers, Back and saved progress with Resume. Already-downloaded
+JSON shortcut. Exact labels based on the setup screens encountered in use,
+including Update without a separate Save button and download-before-close.
+Explicit distinction between browser project names and the Mac application.
+
+Help menu and uploader entry points. Connect on a fresh installation opens
+the guide rather than a missing-client error. Final Desktop JSON validation
+hands off to the existing importer and OAuth connection; existing account
+connections stay untouched. Google actions remain manual and Google-side
+completion is user-reported, not independently verified. Only step markers
+and optional public project ID are stored in guide progress; no tokens,
+passwords, emails or client-secret values. Private filenames also excluded
+from Git/packaging wherever accidentally placed, beyond existing folder rules.
+
+This does not ship a shared verified Google client. A separate public app
+registration/verification is still needed for a general-user one-button flow.
+No personal Google configuration or authorization is distributed.
+
+Validated Qt navigation/completion/resume, project links, copy controls,
+Desktop-file validation and secret-free display/progress, Connect fallback,
+final connection handoff, existing uploader/UI/protocol, packaging privacy
+and permanent installer behavior. Google page changes may require wording
+updates. A real OAuth sign-in remains a Mac-side check.
+
 VERSION 0.24 — DIRECT YOUTUBE UPLOADS (FIRST PHASE)
 
 File-menu uploader and Export-section controls. Google Desktop OAuth through

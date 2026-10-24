@@ -24,7 +24,7 @@ class YouTubeDialog(Q.QDialog):
         group=Q.QGroupBox('1 — Connect your YouTube channel');form=Q.QFormLayout(group);layout.addWidget(group)
         self.channel=Q.QLabel('Not connected');self.channel.setTextFormat(QtCore.Qt.PlainText);self.channel.setWordWrap(True);form.addRow(self.channel)
         row=Q.QHBoxLayout();self.config_button=Q.QPushButton('Choose Google client JSON…');self.config_button.clicked.connect(self.pick_config);row.addWidget(self.config_button);self.connect_button=Q.QPushButton('Connect / change channel…');self.connect_button.clicked.connect(self.connect_account);row.addWidget(self.connect_button);form.addRow(row)
-        row=Q.QHBoxLayout();self.disconnect_button=Q.QPushButton('Disconnect');self.disconnect_button.clicked.connect(self.disconnect);row.addWidget(self.disconnect_button);self.setup_button=Q.QPushButton('YouTube setup guide');self.setup_button.clicked.connect(self.setup_guide);row.addWidget(self.setup_button);form.addRow(row)
+        row=Q.QHBoxLayout();self.disconnect_button=Q.QPushButton('Disconnect');self.disconnect_button.clicked.connect(self.disconnect);row.addWidget(self.disconnect_button);self.setup_button=Q.QPushButton('Guided YouTube setup…');self.setup_button.clicked.connect(self.setup_guide);row.addWidget(self.setup_button);form.addRow(row)
         note=Q.QLabel('First connection requires a Google Desktop OAuth client JSON and YouTube Data API v3 enabled in its project. Sign in on Google’s own page. Renewable access is stored in macOS Keychain; the app does not receive your Google password.');note.setWordWrap(True);form.addRow(note)
         self.fields=Q.QGroupBox('2 — Video and publishing details');form=Q.QFormLayout(self.fields);layout.addWidget(self.fields)
         self.file=Q.QLineEdit(source);self.file.setReadOnly(True);row=Q.QHBoxLayout();row.addWidget(self.file);self.pick_button=Q.QPushButton('Choose video…');self.pick_button.clicked.connect(self.pick_file);self.pick_button.setEnabled(not arm);row.addWidget(self.pick_button);form.addRow('Video',row)
@@ -57,7 +57,10 @@ class YouTubeDialog(Q.QDialog):
         protect_settings_wheel(self)
         if parent and hasattr(parent,'shortcuts'):parent.shortcuts.bind(self,'close',self.reject)
     def setup_guide(self):
-        url=QtCore.QUrl.fromLocalFile(str(ROOT/'Development/User_Guide.html'));url.setFragment('youtube');QtGui.QDesktopServices.openUrl(url)
+        if self.busy():self.status.setText('Finish or cancel the current connection/upload first, then open guided setup.');return
+        from youtube_setup import YouTubeSetup
+        guide=YouTubeSetup(self,connected=bool(self.connected))
+        if guide.exec()==Q.QDialog.Accepted and guide.needs_connect and self.use_config(guide.config_file):self.connect_account()
     def refresh_connection(self):
         try:
             account=self.client.store.load();self.connected=account.get('channel') if account else None
@@ -66,13 +69,14 @@ class YouTubeDialog(Q.QDialog):
         self.disconnect_button.setEnabled(bool(self.connected))
     def pick_config(self):
         path,_=Q.QFileDialog.getOpenFileName(self,'Choose Google Desktop OAuth client JSON',str(Path.home()/'Downloads'),'JSON (*.json)')
-        if not path:return
+        if path:self.use_config(path)
+    def use_config(self,path):
         try:
             config=client_config(path)
             existing=load_json(self.config_path).get('installed',{})
             if self.connected and existing.get('client_id')!=config['client_id']:raise YouTubeError('Disconnect the current channel before choosing a different Google client.')
-            atomic_json(self.config_path,{'installed':config});self.status.setText('Desktop client saved. Click Connect to authorize your channel.')
-        except Exception as error:self.status.setText(str(error))
+            atomic_json(self.config_path,{'installed':config});self.status.setText('Desktop client saved. Click Connect to authorize your channel.');return True
+        except Exception as error:self.status.setText(str(error));return False
     def pick_file(self):
         path,_=Q.QFileDialog.getOpenFileName(self,'Choose a finished rectangular SBS video',str(Path.home()/'Movies'),'SBS videos (*.mp4 *.mkv *.mov *.m4v)')
         if path:
@@ -91,7 +95,8 @@ class YouTubeDialog(Q.QDialog):
     def upload_progress(self,n):self.bar.setRange(0,100);self.bar.setValue(n)
     def connect_account(self):
         try:client_config(self.config_path)
-        except Exception as error:self.status.setText(str(error));return
+        except Exception:
+            self.status.setText('First-time connection needs a Google Desktop client. The guided setup will walk you through it.');self.setup_guide();return
         self.start_job(lambda w:self.client.connect(self.config_path,w.cancel,w.browser.emit,w.message.emit),self.connected_done)
     def connected_done(self,value):self.refresh_connection();self.status.setText('Connected to '+value['title']+'. Review the publishing details below.')
     def disconnect(self):

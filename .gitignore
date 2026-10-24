@@ -12,3 +12,12 @@ Generated Music/
 
 * StereoSlideshow Project*/
 *.stereoslideshow
+
+# Local Google configuration and authorization records, wherever placed.
+**/client_secret*.json
+**/youtube_client.json
+**/token.json
+**/tokens.json
+**/credentials.json
+**/youtube_upload_history.json
+**/youtube_setup.json
