@@ -1,4 +1,4 @@
-STEREO SLIDESHOW — PERMANENT INSTALLATION — v0.31
+STEREO SLIDESHOW — PERMANENT INSTALLATION — v0.32
 
 FIRST INSTALL OR ONE-TIME UPDATE FROM AN OLDER VERSION
 1. Quit Stereo Slideshow if it is open.
@@ -73,3 +73,10 @@ See Development/WINDOWS_README.md. Install 64-bit Python and FFmpeg first,
 then double-click Development/Install-Windows.cmd. This source-installer
 edition has not been run on an actual Windows PC. No standalone EXE/MSI is
 included. The Mac installer is not the Windows installer.
+
+AUTOMATIC UPDATES (v0.32 onward)
+After one installation/launch of this version, the user background updater
+checks roughly every 15 minutes while you are logged in. It installs only
+when the app is closed, without reopening it or disturbing ongoing work.
+Help > Automatically update while app is closed turns this on/off.
+No more routine installer downloads or Check for Updates clicks are needed.

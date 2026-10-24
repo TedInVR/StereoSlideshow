@@ -40,7 +40,7 @@ def check_running(target,home):
     try:
         pid=int(json.loads((target/'Runtime/running.json').read_text())['pid'])
         command=subprocess.check_output(['ps','-p',str(pid),'-o','command='],text=True).strip()
-        if str(target/'Development/app.py') in command:raise RuntimeError('Quit Stereo Slideshow before installing this update, then run the installer again.')
+        if any(str(target/relative) in command for relative in ['Development/app.py','Development/app_bootstrap.py','Development/windows_launch.py']):raise RuntimeError('Quit Stereo Slideshow before installing this update, then run the installer again.')
     except (OSError,ValueError,KeyError,subprocess.CalledProcessError):pass
     # Also catch the previous packaging while the user migrates from v0.12.
     try:

@@ -53,7 +53,7 @@ audio files without ACE-Step.
 
 ## Updates and problem reports
 
-Use **Help → Check for Updates**. Windows installation, process waiting, restart
+Version 0.32 registers a per-user background scheduled task on first launch. It checks roughly every 15 minutes while logged in and installs only while the app is closed. Help → Automatically update while app is closed turns it off. Use **Help → Check for Updates** for manual checking. Windows installation, process waiting, restart
 and secure credentials have Windows-specific implementations but remain untested
 on that OS. Keep your project saved before installing an update. Re-running the
 source installer is a recovery option. Mac and Windows use the same repository.

@@ -10,7 +10,7 @@ if [ ! -x "$PYTHON" ]; then
  /usr/bin/osascript -e 'display dialog "Please run Install or Update.command in the Stereo Slideshow folder first." with title "Stereo Slideshow" buttons {"OK"} default button "OK"'
  exit 1
 fi
-"$PYTHON" "$ROOT/Development/app.py" "$@" >> "$ROOT/Logs/app.log" 2>&1
+"$PYTHON" "$ROOT/Development/app_bootstrap.py" "$@" >> "$ROOT/Logs/app.log" 2>&1
 RESULT=$?
 if [ "$RESULT" -ne 0 ]; then
  /usr/bin/osascript -e 'display dialog "Stereo Slideshow could not start. Open the Logs folder inside the Stereo Slideshow folder and share app.log for help." with title "Stereo Slideshow" buttons {"OK"} default button "OK"'

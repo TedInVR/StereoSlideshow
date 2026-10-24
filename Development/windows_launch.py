@@ -7,7 +7,7 @@ def main():
     logs=root/'Logs';logs.mkdir(exist_ok=True)
     with (logs/'app.log').open('a',encoding='utf-8') as log:
         sys.stdout=log;sys.stderr=log;sys.path.insert(0,str(root/'Development'))
-        try:runpy.run_path(str(root/'Development/app.py'),run_name='__main__')
+        try:runpy.run_path(str(root/'Development/app_bootstrap.py'),run_name='__main__')
         except SystemExit as error:
             if error.code:raise
         except Exception:

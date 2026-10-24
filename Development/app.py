@@ -73,6 +73,11 @@ class Window(ProjectMixin,Q.QWidget):
         file_menu=self.menu.addMenu('File')
         help_menu=self.menu.addMenu('Help')
         help_menu.addAction('Check for Updates…',self.check_for_updates)
+        from automatic_updates import enabled,set_enabled,register_in_background
+        automatic=help_menu.addAction('Automatically update while app is closed');automatic.setCheckable(True);automatic.setChecked(enabled(ROOT))
+        def automatic_changed(value):
+            set_enabled(ROOT,value);register_in_background(ROOT)
+        automatic.toggled.connect(automatic_changed)
         folder_action=help_menu.addAction('Open Stereo Slideshow Folder');folder_action.triggered.connect(lambda:QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(ROOT))))
         setup_action=help_menu.addAction('Guided YouTube Setup…');setup_action.triggered.connect(self.setup_youtube)
         guide_action=help_menu.addAction('User Guide…');guide_action.triggered.connect(self.show_guide)
@@ -484,5 +489,7 @@ if __name__=='__main__':
         lock.unlock()
     atexit.register(release)
     app.setStyle('Fusion'); win=Window(); app.window=win; win.show()
+    from automatic_updates import register_in_background
+    register_in_background(ROOT)
     if len(sys.argv)>1: win.add(sys.argv[1:])
     sys.exit(app.exec())

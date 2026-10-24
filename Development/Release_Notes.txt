@@ -1,3 +1,23 @@
+VERSION 0.32 — UNATTENDED UPDATES WHILE THE APP IS CLOSED
+
+First launch registers a per-user macOS LaunchAgent (15-minute interval and
+login loading), or an experimental Windows interactive scheduled task. The
+worker fetches verified GitHub updates and installs only while the app is
+closed, without reopening it. A cross-process maintenance lock coordinates
+GUI startup with installation. A concurrent newer version cannot be downgraded.
+Open apps, projects, music work and rendering are never closed automatically.
+Settings and the app icon remain in place. Staging downloads are cleaned up.
+
+Help > Automatically update while app is closed enables/disables the agent.
+Enabled by default. Manual checking remains available. Initial installation
+and one launch of this version are required; this chat has no direct Mac access.
+Diagnostics: Logs/automatic_updates.log. No admin service or credentials used.
+
+Validated disabled/running skips, idle installs, lock exclusion across real
+processes, cleanup, version races and generated scheduling configuration.
+Actual macOS/Windows registration and scheduled execution need device testing.
+Windows remains experimental and untested on Windows hardware.
+
 VERSION 0.31 — EXPERIMENTAL WINDOWS SOURCE INSTALLER
 
 Adds Development/Install-Windows.cmd, a per-user installer, windowed launcher,

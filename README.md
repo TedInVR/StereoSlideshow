@@ -4,7 +4,7 @@ A macOS app, with an **experimental Windows source-installer edition**, for
 making stereoscopic photo/video slideshows, with
 ordered music tracks, stereo captions, animated photos, titles and fades.
 Exports full side-by-side MP4, red/cyan anaglyph MP4, and an optional
-YouTube compatibility MKV. Version 0.31.
+YouTube compatibility MKV. Version 0.32.
 
 ## Platforms
 
@@ -35,15 +35,22 @@ No developer Google credentials or personal account files are distributed.
 4. Open your permanent Stereo Slideshow app in Applications. Keep its existing
    icon. After confirming it opens, delete the ZIP and extracted download folder.
 
-## Normal updates (version 0.29 onward)
+## Automatic updates (version 0.32 onward)
 
-Choose **Help → Check for Updates…** in the installed app. If a newer version
-is available, click **Download update**, then **Install and restart**. Save your
-project when asked. The updater downloads into the app's Updates folder, verifies
-file hashes, waits for the app to close, installs and reopens it. It keeps your
-settings and existing app icon and cleans up its download automatically. Checking
-never installs on its own. If installation fails, program-file changes are rolled
-back; see Logs/update.log. Do not remove the permanent Applications folder.
+Install version 0.32 once through the existing Help updater. On its first launch,
+the app registers a per-user background updater. It checks GitHub about every
+15 minutes while logged in and installs newer versions **only while the app is
+closed**, without downloads to manage, prompts or reopening the app. It leaves
+open projects, music generation and renders alone. Updates retain settings and
+the existing icon; downloads are verified and removed after installation.
+
+The Help menu has **Automatically update while app is closed**, enabled by
+default, to turn this off. **Check for Updates…** remains available for immediate
+manual checks. macOS uses a user LaunchAgent; the experimental Windows edition
+uses an interactive, least-privilege scheduled task. No admin service, password
+or remote access from ChatGPT is involved. OS registration needs one launch of
+this updated version. Actual background scheduling still needs device testing.
+See Logs/automatic_updates.log if automatic updates fail.
 
 Python 3.9–3.14 is required. FFmpeg and ffprobe must also be installed (for example, with Homebrew: `brew install ffmpeg`). The installer sets up the Python runtime and app dependencies; follow any messages it displays. The application is
 currently unsigned. If macOS blocks the launcher, use Finder's Open command
