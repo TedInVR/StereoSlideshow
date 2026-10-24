@@ -1,4 +1,4 @@
-STEREO SLIDESHOW — PERMANENT INSTALLATION — v0.25
+STEREO SLIDESHOW — PERMANENT INSTALLATION — v0.26
 
 FIRST INSTALL OR UPDATE
 1. Quit Stereo Slideshow if it is open.
@@ -55,10 +55,8 @@ requires working Python 3.9–3.14 and FFmpeg/FFprobe, as before. Internet is
 needed only when dependencies must be installed. No administrator password
 is requested by this installer.
 
-NEW IN v0.25
-Help > Guided YouTube Setup walks through each Google page, one step at a time.
-Open the right pages, copy required permissions, save your place and resume.
-Already have the JSON? Skip straight to selecting it and connecting.
-Existing YouTube connections and personal settings are preserved.
-A shared verified Google app for simpler public-user connection is a future task.
-No personal Google configuration, tokens or guide progress are bundled.
+NEW IN v0.26
+Clearer YouTube audience question and a What does this mean? explanation.
+General-audience guidance, examples, feature effects and official help links.
+Existing YouTube connections, guided setup and local settings are preserved.
+No personal Google configuration or account tokens are distributed.

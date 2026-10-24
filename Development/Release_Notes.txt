@@ -1,3 +1,18 @@
+VERSION 0.26 — CLEARER YOUTUBE AUDIENCE CHOICE
+
+Plain-language question and general-audience/child-directed labels, conditional
+inline guidance for general-audience slideshows, selection-specific explanation,
+and a What does this mean? help window with examples and official links.
+Separates child-directed purpose from family-friendliness and age restrictions.
+Explains mixed-audience content, under-13 U.S. context, disabled features and
+personalized versus contextual ads. No unsupported “99 percent” recommendation,
+no automatic classification and no promise that No guarantees monetization.
+The creator's explicit choice and API boolean mapping remain unchanged.
+
+Validated neutral initial state, True/False payload mapping, both inline hints,
+help opening/closing without changing the choice, and existing uploader flow.
+Personal account configuration and Keychain storage remain excluded from releases.
+
 VERSION 0.25 — GUIDED YOUTUBE SETUP
 
 Eight-page in-app walkthrough: project, API enablement, consent configuration,

@@ -3,7 +3,7 @@
 A macOS desktop app for making stereoscopic photo/video slideshows, with
 ordered music tracks, stereo captions, animated photos, titles and fades.
 Exports full side-by-side MP4, red/cyan anaglyph MP4, and an optional
-YouTube compatibility MKV. Version 0.25.
+YouTube compatibility MKV. Version 0.26.
 
 ## Install or update on a Mac
 
@@ -157,3 +157,10 @@ Google-side actions remain manual. Progress checkboxes record what the user
 completed, without claiming API verification. Local progress and credentials
 are excluded from releases. A shared verified developer registration for a
 simpler public-user Connect flow is not included in this release.
+
+## Clearer audience choices
+
+The YouTube uploader explains who the video targets, with **No — general
+audience** and **Yes — content directed at children**, conditional guidance
+for general-audience slideshows and **What does this mean?** help beside it.
+The creator still chooses explicitly; guidance does not change the API setting.
