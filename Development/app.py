@@ -164,6 +164,8 @@ class Window(ProjectMixin,Q.QWidget):
         from ui_controls import protect_settings_wheel
         protect_settings_wheel(self)
         self.setup_projects(file_menu)
+        file_menu.addAction('Export editable timeline for DaVinci Resolve…',self.export_resolve)
+        resolve_button=Q.QPushButton('Export editable timeline for DaVinci Resolve…');resolve_button.clicked.connect(self.export_resolve);groups['export'].addRow(resolve_button)
         file_menu.addSeparator();action=file_menu.addAction('Upload finished SBS video to YouTube…');action.triggered.connect(self.upload_youtube)
         self.upload_after=Q.QCheckBox('Upload to YouTube after this render (also creates Full-SBS)');self.upload_after.setChecked(False);groups['export'].addRow(self.upload_after)
         upload_button=Q.QPushButton('YouTube account, template and upload…');upload_button.clicked.connect(self.upload_youtube);groups['export'].addRow(upload_button)
@@ -352,6 +354,14 @@ class Window(ProjectMixin,Q.QWidget):
     def dragEnterEvent(self,e):
         if e.mimeData().hasUrls(): e.acceptProposedAction()
     def dropEvent(self,e): self.add([u.toLocalFile() for u in e.mimeData().urls()]); e.acceptProposedAction()
+    def export_resolve(self):
+        if self.project_busy():self.status.setText('Finish the current render or project save first.');return
+        if not self.files.count():Q.QMessageBox.information(self,'Add photos or videos','Add at least one photo or video first.');return
+        from resolve_dialog import ResolveDialog
+        cfg=self.timing_config();h=[1080,2160,540][self.res.currentIndex()]
+        num,den=map(int,self.aspect.currentText().split(':'))
+        cfg.update(width=4*round(h*num/den/2),height=h,video_sound=self.video_sound.isChecked(),cross=self.cross.isChecked(),video_half=self.video_half.isChecked(),video_cross=self.video_cross.isChecked())
+        dialog=ResolveDialog(self,self.project_snapshot(),cfg);dialog.exec()
     def begin(self):
         if self.project_worker is not None and self.project_worker.isRunning():return
         if self.worker and self.worker.isRunning(): return

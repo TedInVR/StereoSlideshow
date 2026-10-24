@@ -1,3 +1,22 @@
+VERSION 0.27 — EDITABLE DAVINCI RESOLVE SOURCE TIMELINE
+
+File > Export editable timeline for DaVinci Resolve creates a portable OTIOZ
+bundle with copies of referenced original media, frame-based photo/video cuts,
+separate ordered/repeating music and enabled clip sound. Respects music-end,
+auto-fit and clip-mute choices. Adds closing holds and a caption cue sheet.
+No runtime OTIO dependency or Resolve installation is required for export.
+Background copying supports cancellation and never overwrites prior exports.
+
+FIRST STAGE: this is a source edit, not a finished animation/effects match.
+Opening titles are placeholders. Stereo eye framing, cross-eye/half-SBS
+corrections, layers, animation, backgrounds, captions, dissolves, music ducking
+and fades need setup in Resolve. Source media is intentionally unchanged.
+Resolve 18.5+ supports importing OTIOZ. Read the included READ ME.txt.
+Validated portable archive/official OTIO SDK read-back, all track durations,
+playlist looping, muting, holds, timing modes, duplicate names, UI and cancel.
+Actual Resolve import and playback still require verification on a Mac.
+User export folders and OTIO/OTIOZ files are excluded from release packaging.
+
 VERSION 0.26 — CLEARER YOUTUBE AUDIENCE CHOICE
 
 Plain-language question and general-audience/child-directed labels, conditional

@@ -3,7 +3,7 @@
 A macOS desktop app for making stereoscopic photo/video slideshows, with
 ordered music tracks, stereo captions, animated photos, titles and fades.
 Exports full side-by-side MP4, red/cyan anaglyph MP4, and an optional
-YouTube compatibility MKV. Version 0.26.
+YouTube compatibility MKV. Version 0.27.
 
 ## Install or update on a Mac
 
@@ -164,3 +164,23 @@ The YouTube uploader explains who the video targets, with **No — general
 audience** and **Yes — content directed at children**, conditional guidance
 for general-audience slideshows and **What does this mean?** help beside it.
 The creator still chooses explicitly; guidance does not change the API setting.
+
+## Editing in DaVinci Resolve (first-stage export)
+
+Choose **File → Export editable timeline for DaVinci Resolve…**, or the button
+in Export and save. Choose a parent folder and export. In Resolve 18.5 or newer,
+choose **File → Import → Timeline**, select **Edit in Resolve.otioz**, and allow
+Resolve to extract the bundled media into a permanent folder. Check timeline
+frame rate and dimensions against the included READ ME.txt, then save a normal
+Resolve project. The bundle preserves individual source clips, picture timing,
+separate ordered/repeating music and selected video sound. Caption cues are
+included as a CSV reference.
+
+This is an editable source timeline, not a native .drp or a finished look match.
+Original SBS media is copied unchanged: eye framing must be set up in Resolve,
+especially for differing aspect ratios, half-SBS and cross-eye inputs. Titles
+are placeholders; animation, layered backgrounds, stereo captions, transitions,
+fades and music ducking need to be recreated. A final-frame hold is included.
+Keep the app project and finished MP4 for reference. Reapply stereo upload
+metadata after exporting from Resolve. Official OTIO SDK checks pass; an actual
+Resolve import still needs a Mac test.

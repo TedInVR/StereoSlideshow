@@ -12,6 +12,10 @@ Generated Music/
 
 * StereoSlideshow Project*/
 *.stereoslideshow
+* Resolve Export*/
+.resolve-working-*/
+*.otioz
+*.otio
 
 # Local Google configuration and authorization records, wherever placed.
 **/client_secret*.json
