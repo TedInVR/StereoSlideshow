@@ -3,7 +3,7 @@
 A macOS desktop app for making stereoscopic photo/video slideshows, with
 ordered music tracks, stereo captions, animated photos, titles and fades.
 Exports full side-by-side MP4, red/cyan anaglyph MP4, and an optional
-YouTube compatibility MKV. Version 0.27.
+YouTube compatibility MKV. Version 0.28.
 
 ## Install or update on a Mac
 
@@ -136,7 +136,7 @@ committed. Testing clients may require reconnection after seven days.
 
 Review the title, exact description, reusable template, tags, audience,
 synthetic-content disclosure and Private/Unlisted/Public visibility. New uploads
-default to Private. The automatic option authorizes one render only and resets.
+default to Private. Rendering never uploads automatically. Watch the finished video, then use the separate Upload finished video to YouTube button and review the publishing details.
 A tagged stereo MKV upload copy is remuxed without re-encoding; ordinary Full-SBS
 and anaglyph exports are retained. Interrupted chunks retry within the current
 session. Closing/restarting the app does not resume an unfinished upload.
@@ -184,3 +184,17 @@ fades and music ducking need to be recreated. A final-frame hold is included.
 Keep the app project and finished MP4 for reference. Reapply stereo upload
 metadata after exporting from Resolve. Official OTIO SDK checks pass; an actual
 Resolve import still needs a Mac test.
+
+## Preview before rendering the final video
+
+Click **Preview slideshow…**, choose SBS or red/cyan anaglyph, and build a
+270-high/15-fps temporary draft. It opens in your usual video player and uses
+the same sequence, effects, captions and audio as the render engine. The draft
+still takes processing time; it has lower detail and less smooth motion.
+Long clips still need decoding. Final resolution, saved settings, existing
+exports and the default upload file remain unchanged. Previews are temporary.
+
+After the final render, use **Watch finished video**. When satisfied, choose
+**Upload finished video to YouTube…**, review the details and click Upload.
+There is no upload-after-render option. The existing uploader still prepares a
+tagged MKV; MP4 stereo metadata handling is unchanged by this update.

@@ -274,7 +274,7 @@ def render(images,audio,out,cfg,progress,cancel):
                 content_end=min(plan['content_cursor'],plan['fade_start']);fade_start=plan['fade_start']
                 closing_frames=plan['closing'];closing_seconds=closing_frames/fps;count=plan['total'];total=count/fps
         master=Path(td)/'master.mp4'; cmd=[ff,'-hide_banner','-loglevel','error','-nostats','-y','-f','rawvideo','-pix_fmt','rgb24','-s',f'{w*2}x{h}','-r',str(fps),'-i','pipe:0']
-        cmd+=['-t',str(total),'-vf','setsar=1','-c:v','libx264','-preset','veryfast','-crf','18','-pix_fmt','yuv420p','-movflags','+faststart',str(master)]
+        cmd+=['-t',str(total),'-vf','setsar=1','-c:v','libx264','-preset',('ultrafast' if cfg.get('preview') else 'veryfast'),'-crf',('28' if cfg.get('preview') else '18'),'-pix_fmt','yuv420p','-movflags','+faststart',str(master)]
         with tempfile.TemporaryFile() as log:
             p=subprocess.Popen(cmd,stdin=subprocess.PIPE,stdout=log,stderr=log)
             reader=None; current_item=-1; last_content_frame=None; subtitle=None

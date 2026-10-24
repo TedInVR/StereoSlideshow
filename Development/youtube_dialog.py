@@ -16,9 +16,9 @@ class YouTubeWorker(QtCore.QThread):
         except Exception as error:self.failed.emit(str(error)[:650])
 
 class YouTubeDialog(Q.QDialog):
-    def __init__(self,parent=None,source='',title='',arm=False,plan=None):
-        super().__init__(parent);self.setWindowTitle('YouTube — review upload' if not arm else 'YouTube — upload after this render');self.resize(720,760)
-        self.worker=None;self.arm=arm;self.plan=None;self.client=YouTubeClient();self.connected=None;self.uploaded=False
+    def __init__(self,parent=None,source='',title=''):
+        super().__init__(parent);self.setWindowTitle('YouTube — review upload');self.resize(720,760)
+        self.worker=None;self.plan=None;self.client=YouTubeClient();self.connected=None;self.uploaded=False
         self.settings_path=ROOT/'Settings/youtube_upload.json';self.config_path=ROOT/'Settings/youtube_client.json';saved=load_json(self.settings_path)
         outer=Q.QVBoxLayout(self);scroll=Q.QScrollArea();scroll.setWidgetResizable(True);panel=Q.QWidget();layout=Q.QVBoxLayout(panel);scroll.setWidget(panel);outer.addWidget(scroll,1)
         group=Q.QGroupBox('1 — Connect your YouTube channel');form=Q.QFormLayout(group);layout.addWidget(group)
@@ -27,13 +27,13 @@ class YouTubeDialog(Q.QDialog):
         row=Q.QHBoxLayout();self.disconnect_button=Q.QPushButton('Disconnect');self.disconnect_button.clicked.connect(self.disconnect);row.addWidget(self.disconnect_button);self.setup_button=Q.QPushButton('Guided YouTube setup…');self.setup_button.clicked.connect(self.setup_guide);row.addWidget(self.setup_button);form.addRow(row)
         note=Q.QLabel('First connection requires a Google Desktop OAuth client JSON and YouTube Data API v3 enabled in its project. Sign in on Google’s own page. Renewable access is stored in macOS Keychain; the app does not receive your Google password.');note.setWordWrap(True);form.addRow(note)
         self.fields=Q.QGroupBox('2 — Video and publishing details');form=Q.QFormLayout(self.fields);layout.addWidget(self.fields)
-        self.file=Q.QLineEdit(source);self.file.setReadOnly(True);row=Q.QHBoxLayout();row.addWidget(self.file);self.pick_button=Q.QPushButton('Choose video…');self.pick_button.clicked.connect(self.pick_file);self.pick_button.setEnabled(not arm);row.addWidget(self.pick_button);form.addRow('Video',row)
-        self.file.setPlaceholderText('The finished SBS video from this render' if arm else 'Choose a finished full-SBS video')
+        self.file=Q.QLineEdit(source);self.file.setReadOnly(True);row=Q.QHBoxLayout();row.addWidget(self.file);self.pick_button=Q.QPushButton('Choose video…');self.pick_button.clicked.connect(self.pick_file);row.addWidget(self.pick_button);form.addRow('Video',row)
+        self.file.setPlaceholderText('Choose a finished full-SBS video')
         self.layout_choice=Q.QComboBox();self.layout_choice.addItems(['Full-SBS — each eye has normal proportions','Half-SBS — each eye is squeezed horizontally']);form.addRow('Input layout',self.layout_choice)
-        self.stereo_confirm=Q.QCheckBox('This is rectangular left/right SBS (left eye first), not anaglyph or VR180');self.stereo_confirm.setChecked(bool(source) or arm);form.addRow(self.stereo_confirm)
+        self.stereo_confirm=Q.QCheckBox('This is rectangular left/right SBS (left eye first), not anaglyph or VR180');self.stereo_confirm.setChecked(bool(source));form.addRow(self.stereo_confirm)
         self.title=Q.QLineEdit(title or (Path(source).stem.split('_StereoSlideshow_')[0] if source else ''));form.addRow('YouTube title',self.title)
         self.template=Q.QPlainTextEdit(saved.get('description_template',DEFAULT_DESCRIPTION));self.template.setFixedHeight(90);form.addRow('Reusable description template',self.template)
-        label=Q.QLabel('Use {title} or {filename} where needed. Apply template fills the description below; you can then edit it. Before rendering, {filename} uses the proposed title.');label.setWordWrap(True);form.addRow(label)
+        label=Q.QLabel('Use {title} or {filename} where needed. Apply template fills the description below; you can then edit it. If no file is selected, {filename} uses the proposed title.');label.setWordWrap(True);form.addRow(label)
         row=Q.QHBoxLayout();apply=Q.QPushButton('Apply template');apply.clicked.connect(self.apply_template);row.addWidget(apply);save=Q.QPushButton('Save template and default tags');save.clicked.connect(self.save_defaults);row.addWidget(save);form.addRow(row)
         self.description=Q.QPlainTextEdit();self.description.setMinimumHeight(125);self.description.setMaximumHeight(210);form.addRow('Video description',self.description)
         self.tags=Q.QLineEdit(saved.get('tags','3D, stereoscopic, Stereo Slideshow'));self.tags.setPlaceholderText('Comma-separated tags');form.addRow('Tags',self.tags)
@@ -51,15 +51,12 @@ class YouTubeDialog(Q.QDialog):
         self.synthetic=Q.QCheckBox('Disclose altered or synthetic content to YouTube');form.addRow(self.synthetic)
         notice=Q.QLabel('For example, YouTube requires disclosure for synthetically generated music. Select this when using ACE-Step music or other content that needs disclosure.');notice.setWordWrap(True);form.addRow(notice)
         note=Q.QLabel('The uploader prepares a tagged MKV copy without re-encoding. Uploads may take time; YouTube must finish its own processing before 3D playback is available. Keep this app open until the upload finishes.');note.setWordWrap(True);form.addRow(note)
-        notice=Q.QLabel("By clicking ‘Upload to YouTube’ or authorizing upload after this render, you certify that the content complies with the <a href='https://www.youtube.com/t/terms'>YouTube Terms of Service</a> (including the Community Guidelines). Please be sure not to violate others’ copyright or privacy rights. <a href='https://policies.google.com/privacy'>Google Privacy Policy</a>.");notice.setWordWrap(True);notice.setOpenExternalLinks(True);outer.addWidget(notice)
-        self.status=Q.QLabel('Ready. Nothing is uploaded until you click Upload, or explicitly arm uploading after this render.');self.status.setTextFormat(QtCore.Qt.PlainText);self.status.setWordWrap(True);outer.addWidget(self.status)
+        notice=Q.QLabel("By clicking ‘Upload to YouTube’, you certify that the content complies with the <a href='https://www.youtube.com/t/terms'>YouTube Terms of Service</a> (including the Community Guidelines). Please be sure not to violate others’ copyright or privacy rights. <a href='https://policies.google.com/privacy'>Google Privacy Policy</a>.");notice.setWordWrap(True);notice.setOpenExternalLinks(True);outer.addWidget(notice)
+        self.status=Q.QLabel('Watch your finished video first. Nothing is uploaded until you click Upload to YouTube.');self.status.setTextFormat(QtCore.Qt.PlainText);self.status.setWordWrap(True);outer.addWidget(self.status)
         self.bar=Q.QProgressBar();self.bar.hide();outer.addWidget(self.bar)
-        row=Q.QHBoxLayout();outer.addLayout(row);self.go=Q.QPushButton('Use these settings for this render' if arm else 'Upload to YouTube');self.go.clicked.connect(self.submit);row.addWidget(self.go);self.cancel_button=Q.QPushButton('Cancel');self.cancel_button.clicked.connect(self.reject);row.addWidget(self.cancel_button)
+        row=Q.QHBoxLayout();outer.addLayout(row);self.go=Q.QPushButton('Upload to YouTube');self.go.clicked.connect(self.submit);row.addWidget(self.go);self.cancel_button=Q.QPushButton('Cancel');self.cancel_button.clicked.connect(self.reject);row.addWidget(self.cancel_button)
         self.open_video=Q.QPushButton('Open uploaded video');self.open_video.hide();self.open_video.clicked.connect(self.open_result);row.addWidget(self.open_video);self.result_url=''
         self.apply_template();self.refresh_connection()
-        if plan:
-            self.plan=dict(plan)
-            self.title.setText(plan['title']);self.description.setPlainText(plan['description']);self.tags.setText(plan.get('tags',''));self.privacy.setCurrentIndex(max(0,self.privacy.findData(plan['privacy'])));self.kids.setCurrentIndex(self.kids.findData(plan['made_for_kids']));self.synthetic.setChecked(plan.get('synthetic',False));self.layout_choice.setCurrentIndex(1 if plan.get('half_sbs') else 0)
         from ui_controls import protect_settings_wheel
         protect_settings_wheel(self)
         if parent and hasattr(parent,'shortcuts'):parent.shortcuts.bind(self,'close',self.reject)
@@ -111,7 +108,7 @@ class YouTubeDialog(Q.QDialog):
     def reviewed_plan(self):
         if not self.connected:raise YouTubeError('Connect your intended YouTube channel first.')
         if not self.stereo_confirm.isChecked():raise YouTubeError('Confirm that this is left-eye-first rectangular SBS. Anaglyph and VR180 need different handling.')
-        if not self.arm and not Path(self.file.text()).is_file():raise YouTubeError('Choose a finished SBS video file.')
+        if not Path(self.file.text()).is_file():raise YouTubeError('Choose a finished SBS video file.')
         plan=dict(title=self.title.text(),description=self.description.toPlainText(),tags=self.tags.text(),privacy=self.privacy.currentData(),made_for_kids=self.kids.currentData(),synthetic=self.synthetic.isChecked(),channel_id=self.connected['id'],channel_title=self.connected['title'],half_sbs=self.layout_choice.currentIndex()==1)
         video_metadata(plan);return plan
     def submit(self):
@@ -119,15 +116,12 @@ class YouTubeDialog(Q.QDialog):
         try:plan=self.reviewed_plan()
         except Exception as error:self.status.setText(str(error));return
         self.plan=plan
-        if self.arm:super().accept();return
         source=self.file.text()
         self.start_job(lambda w:self.perform_upload(source,plan,w),self.upload_done)
     def perform_upload(self,source,plan,worker):
         with tempfile.TemporaryDirectory(prefix='stereo-youtube-') as temp:
             tagged=prepare_stereo(source,temp,worker.cancel,worker.message.emit,plan.get('half_sbs',False))
             return self.client.upload(tagged,plan,worker.cancel,worker.message.emit,worker.progress.emit)
-    def start_armed(self):
-        if self.plan and not self.busy():self.start_job(lambda w:self.perform_upload(self.file.text(),self.plan,w),self.upload_done)
     def upload_done(self,result):
         self.uploaded=True;self.result_url=result['url'];self.open_video.show();self.status.setText('Upload received by YouTube ('+result['privacy']+'). Processing may still be underway.\n'+result['url'])
         try:

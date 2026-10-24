@@ -1,4 +1,4 @@
-import sys, os, json, threading, traceback, datetime
+import sys, os, json, threading, traceback, datetime, tempfile
 from pathlib import Path
 from PySide6 import QtCore, QtGui, QtWidgets as Q
 from engine import render, Cancelled, RenderError, VIDEO_EXT
@@ -145,7 +145,7 @@ class Window(ProjectMixin,Q.QWidget):
             else:groups[key].addRow(field)
         self.bar=Q.QProgressBar();self.bar.hide();right_layout.addWidget(self.bar)
         self.status=Q.QLabel('Ready • Drag rows to arrange photos and videos.');self.status.setWordWrap(True);self.status.setTextFormat(QtCore.Qt.PlainText);self.status.setSizePolicy(Q.QSizePolicy.Ignored,Q.QSizePolicy.Preferred);right_layout.addWidget(self.status)
-        rr=Q.QHBoxLayout();right_layout.addLayout(rr);self.start=Q.QPushButton('Create slideshow');self.start.clicked.connect(self.begin);rr.addWidget(self.start);self.stop=Q.QPushButton('Cancel');self.stop.setEnabled(False);self.stop.clicked.connect(self.cancel);rr.addWidget(self.stop)
+        rr=Q.QHBoxLayout();right_layout.addLayout(rr);self.preview=Q.QPushButton('Preview slideshow…');self.preview.clicked.connect(self.preview_slideshow);rr.addWidget(self.preview);self.start=Q.QPushButton('Create slideshow');self.start.clicked.connect(self.begin);rr.addWidget(self.start);self.stop=Q.QPushButton('Cancel');self.stop.setEnabled(False);self.stop.clicked.connect(self.cancel);rr.addWidget(self.stop)
         from shortcuts import ShortcutManager
         self.shortcuts=ShortcutManager(ROOT/'Settings/shortcuts.json')
         for name,callback in [('add',self.pick),('music',self.pick_music),('organize',self.organize),('captions',self.edit_captions),('render',self.begin),('guide',self.show_guide),('walkthrough',self.guided_walkthrough),('close',self.close)]:self.shortcuts.bind(self,name,callback)
@@ -167,25 +167,31 @@ class Window(ProjectMixin,Q.QWidget):
         file_menu.addAction('Export editable timeline for DaVinci Resolve…',self.export_resolve)
         resolve_button=Q.QPushButton('Export editable timeline for DaVinci Resolve…');resolve_button.clicked.connect(self.export_resolve);groups['export'].addRow(resolve_button)
         file_menu.addSeparator();action=file_menu.addAction('Upload finished SBS video to YouTube…');action.triggered.connect(self.upload_youtube)
-        self.upload_after=Q.QCheckBox('Upload to YouTube after this render (also creates Full-SBS)');self.upload_after.setChecked(False);groups['export'].addRow(self.upload_after)
-        upload_button=Q.QPushButton('YouTube account, template and upload…');upload_button.clicked.connect(self.upload_youtube);groups['export'].addRow(upload_button)
-        self.pending_upload=None
+        self.preview_job=False;self.preview_temp=None;self.last_exports=[]
+        self.watch=Q.QPushButton('Watch finished video');self.watch.setEnabled(False);self.watch.clicked.connect(self.watch_finished);groups['export'].addRow(self.watch)
+        self.upload_button=Q.QPushButton('Upload finished video to YouTube…');self.upload_button.clicked.connect(self.upload_youtube);groups['export'].addRow(self.upload_button)
+        note=Q.QLabel('Watch your finished video first. Uploading is a separate step and only starts when you click Upload in the YouTube window.');note.setWordWrap(True);groups['export'].addRow(note)
     def setup_youtube(self):
         from youtube_dialog import YouTubeDialog
         dialog=YouTubeDialog(self,title=self.title.text());QtCore.QTimer.singleShot(0,dialog.setup_guide);dialog.exec()
     def upload_youtube(self):
         from youtube_dialog import YouTubeDialog
-        source=next((path for path in getattr(self,'last_exports',[]) if '_Full_SBS_' in Path(path).name and Path(path).suffix.lower()=='.mp4'),'')
-        dialog=YouTubeDialog(self,source,self.title.text());dialog.synthetic.setChecked(any('Generated Music' in Path(path).parts for path in self.playlist()));dialog.exec()
-    def review_youtube_render(self):
-        from youtube_dialog import YouTubeDialog
-        dialog=YouTubeDialog(self,title=self.title.text() or 'Untitled Stereo Slideshow',arm=True);dialog.synthetic.setChecked(any('Generated Music' in Path(path).parts for path in self.playlist()))
-        if dialog.exec()!=Q.QDialog.Accepted:return None
-        return dialog.plan
-    def upload_rendered_youtube(self,source,plan):
-        from youtube_dialog import YouTubeDialog
-        dialog=YouTubeDialog(self,source,plan['title'],plan=plan);dialog.plan=plan
-        QtCore.QTimer.singleShot(0,dialog.start_armed);dialog.exec()
+        source=next((path for path in self.last_exports if '_Full_SBS_' in Path(path).name and Path(path).suffix.lower()=='.mp4' and Path(path).is_file()),'')
+        dialog=YouTubeDialog(self,source,getattr(self,'last_export_title',self.title.text()) if source else self.title.text());dialog.synthetic.setChecked(any('Generated Music' in Path(path).parts for path in self.playlist()));dialog.exec()
+    def watch_finished(self):
+        path=next((p for p in self.last_exports if Path(p).is_file() and Path(p).suffix.lower()=='.mp4'),None)
+        if path is None:path=next((p for p in self.last_exports if Path(p).is_file()),None)
+        if path:QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(path))
+        else:self.status.setText('The finished video has moved or is unavailable. Open it from its saved folder.')
+    def preview_slideshow(self):
+        if self.project_busy():self.status.setText('Finish or cancel the current operation first.');return
+        if not self.files.count():Q.QMessageBox.information(self,'Add photos or videos','Add photos or videos before previewing.');return
+        dialog=Q.QDialog(self);dialog.setWindowTitle('Quick slideshow preview');dialog.resize(520,260)
+        layout=Q.QVBoxLayout(dialog)
+        text=Q.QLabel('Build a temporary 270-high, 15-fps video, then open it in your video player. This still takes processing time; long video clips can take longer. It shows the sequence, effects and sound, with lower detail and less smooth motion than the final video. Your chosen final resolution and saved videos stay unchanged.');text.setWordWrap(True);layout.addWidget(text)
+        view=Q.QComboBox();view.addItems(['Side-by-side 3D','Red/cyan anaglyph (for glasses)']);layout.addWidget(view)
+        buttons=Q.QDialogButtonBox(Q.QDialogButtonBox.Ok|Q.QDialogButtonBox.Cancel);buttons.button(Q.QDialogButtonBox.Ok).setText('Build preview');buttons.accepted.connect(dialog.accept);buttons.rejected.connect(dialog.reject);layout.addWidget(buttons)
+        if dialog.exec()==Q.QDialog.Accepted:self.begin(preview=True,preview_anaglyph=view.currentIndex()==1)
 
     def describe_animation(self):
         subtle=self.animation.currentIndex()==1
@@ -362,43 +368,49 @@ class Window(ProjectMixin,Q.QWidget):
         num,den=map(int,self.aspect.currentText().split(':'))
         cfg.update(width=4*round(h*num/den/2),height=h,video_sound=self.video_sound.isChecked(),cross=self.cross.isChecked(),video_half=self.video_half.isChecked(),video_cross=self.video_cross.isChecked())
         dialog=ResolveDialog(self,self.project_snapshot(),cfg);dialog.exec()
-    def begin(self):
+    def begin(self,preview=False,preview_anaglyph=False):
         if self.project_worker is not None and self.project_worker.isRunning():return
         if self.worker and self.worker.isRunning(): return
         if not self.files.count(): Q.QMessageBox.information(self,'Add photos','Drop some SBS photos or video clips first.'); return
-        if not(self.sbs.isChecked() or self.ana.isChecked() or self.yt.isChecked() or self.upload_after.isChecked()): Q.QMessageBox.information(self,'Choose output','Select at least one output format.'); return
-        upload_plan=None
-        if self.upload_after.isChecked():
-            upload_plan=self.review_youtube_render()
-            if upload_plan is None:return
+        if not preview and not(self.sbs.isChecked() or self.ana.isChecked() or self.yt.isChecked()): Q.QMessageBox.information(self,'Choose output','Select at least one output format.'); return
         h=[1080,2160,540][self.res.currentIndex()]
         num,den=map(int,self.aspect.currentText().split(':')); eye_w=2*round(h*num/den/2); w=eye_w*2
         output=str(Path(item_path(self.files.item(0))).parent/'Stereo Slideshows') if self.source.isChecked() else self.out.text()
         self.actual_output=output
-        cfg=dict(playlist=self.playlist(),end_mode_index=self.end_mode.currentIndex(),end_mode='music' if self.end_mode.currentIndex()==1 else 'visuals',fit_music=self.fit_music.isChecked(),depth_layers=self.layers.isChecked(),layer_strength=self.layer_strength.currentIndex(),captions=self.captions,caption_front=self.caption_front,muted_videos=[item_path(self.files.item(i)) for i in range(self.files.count()) if Path(item_path(self.files.item(i))).suffix.lower() in VIDEO_EXT and self.files.item(i).checkState()==QtCore.Qt.Unchecked],closing_fade=self.closing.value(),video_half=self.video_half.isChecked(),video_cross=self.video_cross.isChecked(),video_sound=self.video_sound.isChecked(),motion_style=['Closer zoom and side drift','Gentle'][self.animation.currentIndex()],background_style_v6=self.backdrop.currentText(),eye_aspect=self.aspect.currentText(),background_style=self.backdrop.currentText(),drift=[0,.0015,.003][self.drift.currentIndex()],drift_choice_v4=self.drift.currentIndex(),width=w,height=h,fps=30,seconds=self.sec.value(),seconds_v3=self.manual_seconds if self.fit_music.isChecked() else self.sec.value(),pause=self.pause.value(),title_seconds=self.title_sec.value(),title=self.title.text(),title_motion=self.motion.currentText(),background=self.bg,text_color=self.fg,cross=self.cross.isChecked(),sbs=self.sbs.isChecked() or bool(upload_plan),youtube=self.yt.isChecked(),youtube_v4=self.yt.isChecked(),source_output=self.source.isChecked(),anaglyph=self.ana.isChecked(),audio=self.audio,output=self.out.text(),resolution=self.res.currentIndex())
+        cfg=dict(playlist=self.playlist(),end_mode_index=self.end_mode.currentIndex(),end_mode='music' if self.end_mode.currentIndex()==1 else 'visuals',fit_music=self.fit_music.isChecked(),depth_layers=self.layers.isChecked(),layer_strength=self.layer_strength.currentIndex(),captions=self.captions,caption_front=self.caption_front,muted_videos=[item_path(self.files.item(i)) for i in range(self.files.count()) if Path(item_path(self.files.item(i))).suffix.lower() in VIDEO_EXT and self.files.item(i).checkState()==QtCore.Qt.Unchecked],closing_fade=self.closing.value(),video_half=self.video_half.isChecked(),video_cross=self.video_cross.isChecked(),video_sound=self.video_sound.isChecked(),motion_style=['Closer zoom and side drift','Gentle'][self.animation.currentIndex()],background_style_v6=self.backdrop.currentText(),eye_aspect=self.aspect.currentText(),background_style=self.backdrop.currentText(),drift=[0,.0015,.003][self.drift.currentIndex()],drift_choice_v4=self.drift.currentIndex(),width=w,height=h,fps=30,seconds=self.sec.value(),seconds_v3=self.manual_seconds if self.fit_music.isChecked() else self.sec.value(),pause=self.pause.value(),title_seconds=self.title_sec.value(),title=self.title.text(),title_motion=self.motion.currentText(),background=self.bg,text_color=self.fg,cross=self.cross.isChecked(),sbs=self.sbs.isChecked(),youtube=self.yt.isChecked(),youtube_v4=self.yt.isChecked(),source_output=self.source.isChecked(),anaglyph=self.ana.isChecked(),audio=self.audio,output=self.out.text(),resolution=self.res.currentIndex())
         if cfg['end_mode']=='music' or cfg['fit_music']:
             plan,message=self.preview_for([item_path(self.files.item(i)) for i in range(self.files.count())],self.playlist(),cfg)
             if plan is None:
                 Q.QMessageBox.information(self,'Timing calculator',message);return
-        SETTINGS.parent.mkdir(parents=True,exist_ok=True); SETTINGS.write_text(json.dumps(cfg,indent=2)); self.muted_paths=set(cfg['muted_videos'])
-        self.pending_upload=upload_plan;self.upload_after.setChecked(False)
+        if preview:
+            if self.preview_temp:self.preview_temp.cleanup()
+            self.preview_temp=tempfile.TemporaryDirectory(prefix='StereoSlideshow-preview-')
+            output=self.preview_temp.name
+            ph=270;pw=4*round(ph*num/den/2)
+            cfg.update(width=pw,height=ph,fps=15,sbs=not preview_anaglyph,anaglyph=preview_anaglyph,youtube=False,preview=True)
+        else:
+            SETTINGS.parent.mkdir(parents=True,exist_ok=True);SETTINGS.write_text(json.dumps(cfg,indent=2));self.muted_paths=set(cfg['muted_videos'])
+            self.render_title=cfg['title']
+        self.preview_job=preview
         self.worker=Worker([item_path(self.files.item(i)) for i in range(self.files.count())],self.playlist(),output,cfg)
         self.worker.update.connect(self.progress); self.worker.done.connect(self.finished); self.worker.failed.connect(self.error)
-        self.bar.setValue(0);self.bar.show();self.start.setEnabled(False); self.stop.setEnabled(True); self.worker.start()
-    def progress(self,n,s): self.bar.show();self.bar.setValue(n); self.status.setText(s)
+        self.bar.setValue(0);self.bar.show();self.preview.setEnabled(False);self.start.setEnabled(False); self.stop.setEnabled(True); self.worker.start()
+    def progress(self,n,s): self.bar.show();self.bar.setValue(n); self.status.setText(('Preview: ' if self.preview_job else '')+s)
     def cancel(self):
         if self.worker: self.worker.cancel.set(); self.status.setText('Cancelling…')
     def finished(self,files):
-        self.last_exports=list(files);plan=self.pending_upload;self.pending_upload=None
-        self.bar.hide()
-        self.start.setEnabled(True); self.stop.setEnabled(False); self.status.setText('Finished: '+ '\n'.join(files)); QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(self.actual_output))
-        if plan:
-            source=next((path for path in files if '_Full_SBS_' in Path(path).name and Path(path).suffix.lower()=='.mp4'),'')
-            if source:self.upload_rendered_youtube(source,plan)
-            else:self.status.setText('Rendering finished, but no Full-SBS MP4 was available for the requested upload. Local exports are safe.')
+        self.bar.hide();self.preview.setEnabled(True);self.start.setEnabled(True);self.stop.setEnabled(False)
+        if self.preview_job:
+            self.preview_job=False
+            self.status.setText('Preview ready. Watch it in your video player, adjust settings if needed, then click Create slideshow for the final video. Preview files are temporary.')
+            if files:QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(files[0]))
+            return
+        self.last_exports=list(files);self.last_export_title=getattr(self,'render_title',self.title.text());self.watch.setEnabled(bool(files))
+        self.status.setText('Finished. Click Watch finished video to review it. Use Upload finished video to YouTube when you are happy with it.\n'+'\n'.join(files))
+        QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(self.actual_output))
     def error(self,s,logfile=''):
-        self.pending_upload=None
-        self.bar.hide()
+        self.preview_job=False
+        self.bar.hide();self.preview.setEnabled(True)
         self.start.setEnabled(True);self.stop.setEnabled(False);self.status.setText(s[:240])
         if s.startswith('Cancelled.'):return
         # Keep the explanation bounded; raw encoder output never controls window size.

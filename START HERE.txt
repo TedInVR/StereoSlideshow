@@ -1,4 +1,4 @@
-STEREO SLIDESHOW — PERMANENT INSTALLATION — v0.27
+STEREO SLIDESHOW — PERMANENT INSTALLATION — v0.28
 
 FIRST INSTALL OR UPDATE
 1. Quit Stereo Slideshow if it is open.
@@ -55,7 +55,7 @@ requires working Python 3.9–3.14 and FFmpeg/FFprobe, as before. Internet is
 needed only when dependencies must be installed. No administrator password
 is requested by this installer.
 
-NEW IN v0.27
+NEW IN v0.28
 Clearer YouTube audience question and a What does this mean? explanation.
 General-audience guidance, examples, feature effects and official help links.
 Existing YouTube connections, guided setup and local settings are preserved.

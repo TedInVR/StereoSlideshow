@@ -1,3 +1,26 @@
+VERSION 0.28 — PREVIEW, WATCH, THEN UPLOAD
+
+Removed the automatic YouTube upload checkbox and its queued-upload code.
+Rendering never initiates an upload. Watch finished video opens the latest
+finished export; Upload finished video to YouTube opens a separate review.
+The upload starts only when Upload to YouTube is explicitly clicked there.
+
+Preview slideshow builds a temporary 270-high/15-fps draft using the same
+slideshow engine, effects, captions, timing, music and enabled clip sound.
+Choose full SBS or red/cyan anaglyph, then watch it in your video player.
+Uses a faster encoder setting. No final output settings, saved video files,
+project contents or selected upload file are replaced by preview results.
+Previews still require processing, have lower detail/less smooth motion, and
+are removed on replacement or app exit. Long clips still require decoding.
+This is a draft-video preview, not live playback without rendering.
+
+Validated actual SBS/anaglyph previews with audio and expected frame rate,
+settings/output isolation, manual-only upload, cancellation, project/Resolve
+flows and installation preserving the existing app icon. Mac player opening
+and perceived speed still need a real-device check.
+The existing YouTube compatibility workflow still uses tagged MKV copies;
+this update does not change MP4 stereo metadata handling.
+
 VERSION 0.27 — EDITABLE DAVINCI RESOLVE SOURCE TIMELINE
 
 File > Export editable timeline for DaVinci Resolve creates a portable OTIOZ
