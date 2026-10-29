@@ -61,14 +61,22 @@ class MusicDialog(Q.QDialog):
         for label,value in [('Instrumental','instrumental'),('Write a song about a topic','topic'),('Use my lyrics','lyrics')]:self.mode.addItem(label,value)
         self.mode.setCurrentIndex(max(0,self.mode.findData(saved.get('music_mode','instrumental'))));form.addRow('Music mode',self.mode)
         self.mode_hint=Q.QLabel();self.mode_hint.setWordWrap(True);form.addRow(self.mode_hint)
-        for name,items,label in [('era',ERAS,'Era'),('genre',GENRES,'Genre'),('mood',MOODS,'Mood')]:
-            widget=Q.QComboBox();widget.addItems(items);widget.setEditable(True);widget.setCurrentText(saved.get(name,items[0]));setattr(self,name,widget);form.addRow(label,widget)
+        for name,items,label in [('genre',GENRES,'Starting style'),('mood',MOODS,'Mood')]:
+            widget=Q.QComboBox();widget.addItems(items);value=saved.get(name,items[0])
+            if widget.findText(value)<0:widget.addItem(value)
+            widget.setCurrentText(value);setattr(self,name,widget);form.addRow(label,widget)
+        style_note=Q.QLabel('Choose one starting style and keep extra directions short. These are focused presets, not guaranteed genre strengths. Choose Use description only to supply the entire style yourself.');style_note.setWordWrap(True);form.addRow(style_note)
+        advanced=Q.QCheckBox('Show optional era reference');self.era_toggle=advanced;form.addRow(advanced)
+        self.era=Q.QComboBox();self.era.addItems(ERAS);self.era.setCurrentText(saved.get('era','Any era'));self.era.setVisible(self.era.currentText()!='Any era');advanced.setChecked(self.era.currentText()!='Any era');form.addRow(self.era)
+        advanced.toggled.connect(lambda checked:(self.era.setVisible(checked),None if checked else self.era.setCurrentText('Any era')))
+        self.planning=Q.QCheckBox('Use music planning (slower; recommended)');self.planning.setChecked(saved.get('music_planning',True));form.addRow(self.planning)
+        planning_note=Q.QLabel('Uses ACE-Step’s language model to plan the music, including instrumentals. Needs additional loading time and memory. Turn off for direct generation; topic-written songs still need the language model.');planning_note.setWordWrap(True);form.addRow(planning_note)
         from description_presets import DescriptionPresets
         self.description_presets=DescriptionPresets(ROOT/'Settings/music_descriptions.json')
         row=Q.QHBoxLayout();self.saved_descriptions=Q.QComboBox();self.saved_descriptions.setSizeAdjustPolicy(Q.QComboBox.AdjustToMinimumContentsLengthWithIcon);self.saved_descriptions.setMinimumContentsLength(16);self.saved_descriptions.setSizePolicy(Q.QSizePolicy.Ignored,Q.QSizePolicy.Fixed);self.saved_descriptions.activated.connect(self.load_description);row.addWidget(self.saved_descriptions,1)
         self.save_description_button=Q.QPushButton('Save description…');self.save_description_button.clicked.connect(self.save_description);row.addWidget(self.save_description_button)
         self.remove_description_button=Q.QPushButton('Remove');self.remove_description_button.clicked.connect(self.remove_description);row.addWidget(self.remove_description_button);form.addRow('Saved descriptions',row)
-        self.details=Q.QPlainTextEdit(saved.get('details',''));self.details.setPlaceholderText('Optional: piano and strings, a playful melody, no heavy drums…');self.details.setMinimumHeight(110);self.details.setMaximumHeight(160);form.addRow('Your description',self.details)
+        self.details=Q.QPlainTextEdit(saved.get('details',''));self.details.setPlaceholderText('Optional: warm acoustic guitar, gentle rhythm, intimate studio sound…');self.details.setMinimumHeight(110);self.details.setMaximumHeight(160);form.addRow('Your description',self.details)
         self.vocal_panel=Q.QWidget();vocal_form=Q.QFormLayout(self.vocal_panel);vocal_form.setContentsMargins(0,0,0,0);form.addRow(self.vocal_panel)
         self.voice=Q.QComboBox();self.voice.addItems(VOICES);self.voice.setCurrentText(saved.get('voice','No preference'));vocal_form.addRow('Vocal preference',self.voice)
         self.language=Q.QComboBox();self.language.addItems(list(LANGUAGES));self.language.setCurrentText(saved.get('language','English'));vocal_form.addRow('Song language',self.language)
@@ -83,7 +91,7 @@ class MusicDialog(Q.QDialog):
         if seconds>600:
             note=Q.QLabel('This slideshow is longer than one generation. Matching sections will be created and crossfaded into one soundtrack.');note.setWordWrap(True);layout.addWidget(note)
         note=Q.QLabel('Using this result replaces the music playlist and keeps the photo timing shown here. Auto-Fit is turned off so the music follows your slideshow. Earlier music files are kept.');note.setWordWrap(True);layout.addWidget(note)
-        self.status=Q.QLabel('Ready. First model loading can take several minutes.');self.status.setTextFormat(QtCore.Qt.PlainText);self.status.setWordWrap(True);outer.addWidget(self.status)
+        self.status=Q.QLabel('Ready. First model and music-planning loading can take several minutes.');self.status.setTextFormat(QtCore.Qt.PlainText);self.status.setWordWrap(True);outer.addWidget(self.status)
         self.progress=Q.QProgressBar();self.progress.setRange(0,0);self.progress.hide();outer.addWidget(self.progress)
         row=Q.QHBoxLayout();outer.addLayout(row);self.generate=Q.QPushButton('Generate music');self.generate.clicked.connect(self.begin);row.addWidget(self.generate);self.cancel_button=Q.QPushButton('Cancel generation');self.cancel_button.clicked.connect(self.cancel_generation);self.cancel_button.setEnabled(False);row.addWidget(self.cancel_button)
         row=Q.QHBoxLayout();outer.addLayout(row);self.play=Q.QPushButton('Play preview');self.play.clicked.connect(self.preview);self.play.setEnabled(False);row.addWidget(self.play);self.stop=Q.QPushButton('Stop preview');self.stop.clicked.connect(self.stop_preview);self.stop.setEnabled(False);row.addWidget(self.stop)
@@ -104,7 +112,11 @@ class MusicDialog(Q.QDialog):
     def restore_take_style(self,path):
         style=take_style(metadata_for(path))
         for key in ('era','genre','mood','voice','language'):
-            if key in style:getattr(self,key).setCurrentText(style[key])
+            if key in style:
+                widget=getattr(self,key)
+                if widget.findText(style[key])<0:widget.addItem(style[key])
+                widget.setCurrentText(style[key])
+                if key=='era':self.era_toggle.setChecked(style[key]!='Any era')
         for key in ('details','topic','lyrics'):
             if key in style:getattr(self,key).setPlainText(style[key])
         if 'music_mode' in style:self.mode.setCurrentIndex(max(0,self.mode.findData(style['music_mode'])))
@@ -167,9 +179,9 @@ class MusicDialog(Q.QDialog):
         if name is None:return
         try:
             text=self.description_presets.load()[name]
-            self.details.selectAll();self.details.insertPlainText(text)
+            self.details.selectAll();self.details.insertPlainText(text);self.genre.setCurrentText('Use description only');self.era.setCurrentText('Any era');self.era_toggle.setChecked(False)
             warning=' This description mentions vocals; select a song mode for singing, or remove vocal directions for instrumental use.' if self.mode.currentData()=='instrumental' and any(word in text.lower() for word in ['vocal','female lead','male lead']) else ''
-            self.status.setText('Loaded description: '+name+'. For its detailed style, you can select Genre → Use description only.'+warning)
+            self.status.setText('Loaded description: '+name+'. Using this description alone; preset and era directions are not added.'+warning)
         except Exception as error:self.status.setText('Could not load description: '+str(error)[:250])
     def save_description(self):
         text=self.details.toPlainText()
@@ -204,7 +216,7 @@ class MusicDialog(Q.QDialog):
         if folder:self.folder.setText(folder)
     def begin(self):
         if self.worker and self.worker.isRunning():return
-        self.stop_preview();options=dict(self.style_options(),operation=self.operation.currentData(),source_audio=self.source_path,edit_start=self.edit_start.value(),edit_end=self.edit_end.value(),instrument=self.instrument.currentText(),layer_volume=self.layer_volume.value(),folder=self.folder.text().strip(),url=self.url.text().strip(),token=self.token.text(),logs=str(ROOT/'Logs'))
+        self.stop_preview();options=dict(self.style_options(),music_planning=self.planning.isChecked(),operation=self.operation.currentData(),source_audio=self.source_path,edit_start=self.edit_start.value(),edit_end=self.edit_end.value(),instrument=self.instrument.currentText(),layer_volume=self.layer_volume.value(),folder=self.folder.text().strip(),url=self.url.text().strip(),token=self.token.text(),logs=str(ROOT/'Logs'))
         try:
             from music_generator import local_url
             (validate_music_options(options,self.seconds) if options['operation']=='new' else validate_edit(options,self.seconds,self.source_seconds));local_url(options['url']);self.settings_path.parent.mkdir(parents=True,exist_ok=True);self.settings_path.write_text(json.dumps({k:v for k,v in options.items() if k!='logs'},indent=2))

@@ -33,3 +33,16 @@ class TimingSummary(Q.QPlainTextEdit):
     def changeEvent(self,event):
         super().changeEvent(event)
         if event.type() in (QtCore.QEvent.FontChange,QtCore.QEvent.StyleChange):self.fit_height()
+
+
+def style_step_section(box,number):
+    """Subtle alternating tints that follow the active light/dark palette."""
+    from PySide6 import QtGui,QtWidgets
+    base=QtWidgets.QApplication.palette().color(QtGui.QPalette.Window)
+    accent=QtGui.QColor('#d86673' if number%2 else '#42bdcc')
+    amount=.075 if base.lightness()>128 else .12
+    tint=QtGui.QColor(*[round(base.getRgb()[i]*(1-amount)+accent.getRgb()[i]*amount) for i in range(3)])
+    box.setProperty('stepSection',True)
+    box.setStyleSheet('QGroupBox[stepSection="true"] { background-color: '+tint.name()+'; border: 1px solid rgba(128,128,128,45); border-radius: 8px; margin-top: 16px; padding-top: 12px; font-size: 17px; font-weight: 600; } '
+        'QGroupBox[stepSection="true"]::title { subcontrol-origin: margin; left: 14px; padding: 0 6px; } '
+        'QGroupBox[stepSection="true"] QWidget { font-size: 13px; font-weight: 400; }')

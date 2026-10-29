@@ -1,3 +1,10 @@
+v0.34 — Readable steps and focused music generation
+- Larger step headings, alternating subtle red/cyan section tints, more padding and spacing, including Step 1.
+- Five focused music starting styles plus description-only; optional era reference. Saved legacy styles remain available.
+- Saved descriptions no longer stack with preset/era directions. Vocal and supplied-lyrics modes retained.
+- Enable ACE-Step music planning by default for new instrumental and vocal generation, with direct-generation opt-out. Extra LM loading time/memory may be needed.
+- Guide documents research, limitations and the need for listening tests on the installed engine. No genre quality guarantees or automatic larger-model switch.
+
 v0.33 — Optional captions and project reload fix
 - Right-side Captions section with reversible Show captions switch. Caption text is retained when hidden.
 - Explicit Use photo / video names as captions option; the editor starts missing captions blank.

@@ -246,3 +246,6 @@ validate the checksums/tests, and publish those public files together on GitHub
 main. The in-app updater pins that commit and verifies its manifest. A new ZIP
 is needed only for first-time/manual installation, not for existing users.
 Never commit Settings, Runtime, tokens, client JSON, generated music or media.
+
+### v0.34: clearer steps and focused music controls
+Larger headings and subtle alternating red/cyan panels separate the main steps. Music offers five instrument-specific starting styles plus description-only, with optional era reference and music planning enabled by default. Lyrics remain supported. See the User Guide for planner requirements, research and quality limitations.

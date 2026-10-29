@@ -84,16 +84,17 @@ class Window(ProjectMixin,Q.QWidget):
         walkthrough_action=help_menu.addAction('Guided Walkthrough…');walkthrough_action.triggered.connect(self.guided_walkthrough)
         heading=Q.QLabel('Stereo Slideshow'+(' — Experimental Windows version' if sys.platform=='win32' else '')); heading.setStyleSheet('font-size:26px;font-weight:600'); layout.addWidget(heading)
         columns=Q.QSplitter(QtCore.Qt.Horizontal);layout.addWidget(columns,1)
-        left=Q.QWidget();left_layout=Q.QVBoxLayout(left);left_layout.setContentsMargins(0,0,8,0);columns.addWidget(left)
+        from ui_controls import style_step_section
+        left=Q.QGroupBox('Step 1 — Add and arrange content');style_step_section(left,1);left_layout=Q.QVBoxLayout(left);left_layout.setContentsMargins(14,20,14,14);left_layout.setSpacing(10);columns.addWidget(left)
         right=Q.QWidget();right_layout=Q.QVBoxLayout(right);right_layout.setContentsMargins(0,0,0,0);columns.addWidget(right)
-        left_layout.addWidget(Q.QLabel('Step 1 — Add and arrange content'))
         content_title=Q.QLabel('Content — Drag photos and music here');content_title.setWordWrap(True);content_title.setStyleSheet('font-weight:600');left_layout.addWidget(content_title)
         left_layout.addWidget(Q.QLabel('3D video clips are welcome too.'))
         scroll=Q.QScrollArea();scroll.setWidgetResizable(True);scroll.setFrameShape(Q.QFrame.NoFrame)
         panel=Q.QWidget();sections=Q.QVBoxLayout(panel);scroll.setWidget(panel);right_layout.addWidget(scroll,1)
         groups={}
+        sections.setSpacing(18)
         for key,title in [('music','Step 2 — Music playlist'),('timing','Step 3 — Timing'),('appearance','Step 4 — Picture and 3D'),('title','Step 5 — Opening title'),('captions','Step 6 — Captions (optional)'),('export','Step 7 — Export and save')]:
-            box=Q.QGroupBox(title);box.setStyleSheet('QGroupBox { font-weight:600; margin-top:10px; padding-top:12px; }');groups[key]=Q.QFormLayout(box);groups[key].setRowWrapPolicy(Q.QFormLayout.WrapLongRows);sections.addWidget(box)
+            box=Q.QGroupBox(title);style_step_section(box,int(title.split()[1]));groups[key]=Q.QFormLayout(box);groups[key].setContentsMargins(14,20,14,16);groups[key].setVerticalSpacing(12);groups[key].setRowWrapPolicy(Q.QFormLayout.WrapLongRows);sections.addWidget(box)
         sections.addStretch();columns.setSizes([440,700])
         header=Q.QHBoxLayout();left_layout.addLayout(header);header.addStretch();expand=Q.QPushButton('+ Expand lists');expand.setToolTip('Open a nearly full-screen organizer for photos, videos and music');expand.clicked.connect(self.organize);header.addWidget(expand)
         self.files=Q.QListWidget(); self.files.setDragDropMode(Q.QAbstractItemView.InternalMove); self.files.setSelectionMode(Q.QAbstractItemView.ExtendedSelection); left_layout.addWidget(self.files,1)
