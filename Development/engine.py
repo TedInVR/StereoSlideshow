@@ -307,7 +307,7 @@ def render(images,audio,out,cfg,progress,cancel):
                             if reader is not None:reader.close();reader=None
                             current_item+=1
                             item=items[current_item]
-                            subtitle=caption_image(cfg.get('captions',{}).get(item['path'],''),w,h)
+                            subtitle=caption_image(cfg.get('captions',{}).get(item['path'],'') if cfg.get('captions_enabled',True) else '',w,h)
                             if item['video']:reader=VideoReader(item['path'],item['info'],w,h,fps,cfg)
                         i=current_item;item=items[i];local_frame=n-item['start'];st=local_frame/fps
                         if item['video']:

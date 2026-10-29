@@ -1,3 +1,8 @@
+v0.33 — Optional captions and project reload fix
+- Right-side Captions section with reversible Show captions switch. Caption text is retained when hidden.
+- Explicit Use photo / video names as captions option; the editor starts missing captions blank.
+- Saving projects no longer invents filename captions. Caption visibility is saved and restored. Older projects open with captions off and retain their text.
+
 VERSION 0.32 — UNATTENDED UPDATES WHILE THE APP IS CLOSED
 
 First launch registers a per-user macOS LaunchAgent (15-minute interval and

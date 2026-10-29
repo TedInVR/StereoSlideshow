@@ -60,7 +60,7 @@ def export_timeline(parent, snapshot, cfg, cancel, progress=lambda *args:None):
         count=max(0,min(item['frames'],plan['fade_start']-item['start']))
         if not count:continue
         path=record['path'];url=asset(path);available=max(count,math.ceil(duration*fps)) if duration else total
-        caption=snapshot.get('captions',{}).get(path,'')
+        caption=snapshot.get('captions',{}).get(path,'') if snapshot.get('settings',{}).get('captions_enabled',True) else ''
         visuals.append(clip(Path(path).name,url,count,fps,available,{'StereoSlideshow':{'caption':caption}}))
         cues.append([item['start']/fps,(item['start']+count)/fps,Path(path).name,caption])
         last=(path,duration,count)

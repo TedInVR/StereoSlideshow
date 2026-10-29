@@ -51,9 +51,9 @@ class ProjectMixin:
             elif isinstance(widget,Q.QDoubleSpinBox):value=widget.value()
             else:value=widget.text()
             settings[name]=value
-        settings.update(music_style=self.project_music_style,bg=self.bg,fg=self.fg,caption_front=self.caption_front,manual_seconds=self.manual_seconds if self.fit_music.isChecked() else self.sec.value())
+        settings.update(captions_enabled=self.captions_enabled.isChecked(),music_style=self.project_music_style,bg=self.bg,fg=self.fg,caption_front=self.caption_front,manual_seconds=self.manual_seconds if self.fit_music.isChecked() else self.sec.value())
         media=[{'path':self.files.item(i).data(QtCore.Qt.UserRole),'sound':self.files.item(i).checkState()!=QtCore.Qt.Unchecked} for i in range(self.files.count())]
-        captions={item['path']:self.captions.get(item['path'],Path(item['path']).stem) for item in media}
+        captions={item['path']:self.captions.get(item['path'],'') for item in media}
         return dict(settings=settings,media=media,music=self.playlist(),captions=captions)
     def project_busy(self):
         return (self.worker is not None and self.worker.isRunning()) or (self.project_worker is not None and self.project_worker.isRunning())
@@ -107,6 +107,7 @@ class ProjectMixin:
         if not isinstance(style,dict) or any(key not in STYLE_KEYS or not isinstance(value,str) for key,value in style.items()):raise ProjectError('The project music style is invalid.')
         for name in ['bg','fg']:
             if not isinstance(settings.get(name),str) or not QtGui.QColor(settings[name]).isValid():raise ProjectError('The project contains an invalid color.')
+        if not isinstance(settings.get('captions_enabled',False),bool):raise ProjectError('The caption visibility setting is invalid.')
         if not isinstance(settings.get('caption_front'),bool):raise ProjectError('The project caption setting is invalid.')
         value=settings.get('manual_seconds')
         if not isinstance(value,(int,float)) or not math.isfinite(value) or not self.sec.minimum()<=value<=self.sec.maximum():raise ProjectError('The manual photo duration is invalid.')
@@ -130,6 +131,7 @@ class ProjectMixin:
                 elif isinstance(widget,Q.QDoubleSpinBox):widget.setValue(value)
                 else:widget.setText(value)
             self.project_music_style=dict(music_mode='instrumental',voice='No preference',language='English',topic='',lyrics='');self.project_music_style.update(settings.get('music_style',{}))
+            self.captions_enabled.setChecked(settings.get('captions_enabled',False))
             self.bg=settings['bg'];self.fg=settings['fg'];self.bgbutton.setText(self.bg);self.fgbutton.setText(self.fg);self.caption_front=settings['caption_front'];self.manual_seconds=settings['manual_seconds'];self.captions=data['captions'];self.muted_paths=set()
             self.files.clear()
             for record in data['media']:

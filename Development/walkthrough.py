@@ -50,8 +50,9 @@ class Walkthrough(Q.QWizard):
         self.clone_field(body,'title','Opening title');self.clone_field(body,'pause','Blank opening (seconds)');self.clone_field(body,'title_sec','Title duration (seconds)');self.clone_field(body,'motion','Title depth movement')
         for label,is_title in [('Choose background color…',False),('Choose title color…',True)]:
             b=Q.QPushButton(label);b.clicked.connect(lambda _=False,t=is_title:self.color(t));body.addRow(b)
+        self.clone_check(body,'captions_enabled','Show captions in the video')
         b=Q.QPushButton('Edit captions for these photos and videos…');b.clicked.connect(self.edit_captions);body.addRow(b)
-        body.addRow(Q.QLabel('Caption defaults use filenames without extensions. Clear a caption to leave it off.'))
+        body.addRow(Q.QLabel('Captions are off unless enabled. Turning them off keeps the text for later. Use the main Captions section to fill from filenames.'))
         page,body=self.add_step('5 of 6 — Music and save location','Music loops automatically. Original clip sound is controlled by the checkboxes in Step 2.')
         self.playlist=Q.QListWidget();self.playlist.setDragDropMode(Q.QAbstractItemView.InternalMove);self.playlist.setSelectionMode(Q.QAbstractItemView.ExtendedSelection);body.addRow('Music playlist — drag to reorder',self.playlist)
         for path in main.playlist():self.playlist.addItem(audio_item(path,main.duration(path)))
@@ -128,7 +129,7 @@ class Walkthrough(Q.QWizard):
             else:self.bg=c.name()
     def edit_captions(self):
         dialog=self.caption_editor([path_of(self.media.item(i)) for i in range(self.media.count())],self.captions,self.caption_front,self)
-        if dialog.exec()==Q.QDialog.Accepted:self.captions=dialog.captions;self.caption_front=dialog.front.isChecked()
+        if dialog.exec()==Q.QDialog.Accepted:self.captions=dialog.captions;self.caption_front=dialog.front.isChecked();self.controls['captions_enabled'].setChecked(True)
     def create_music(self):
         paths=[path_of(self.media.item(i)) for i in range(self.media.count())]
         if not paths:self.message('Add photos and videos first.');return

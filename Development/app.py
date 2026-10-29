@@ -33,7 +33,7 @@ class CaptionEditor(Q.QDialog):
     def __init__(self,paths,captions,front,parent):
         super().__init__(parent);self.setWindowTitle('Photo and video captions');self.resize(900,540)
         self.paths=paths;self.captions=dict(captions);self.current=None
-        for path in paths:self.captions.setdefault(path,Path(path).stem)
+        for path in paths:self.captions.setdefault(path,'')
         layout=Q.QVBoxLayout(self);layout.addWidget(Q.QLabel('Select an item, then type its caption. Leave blank for no caption.'))
         split=Q.QSplitter();layout.addWidget(split,1)
         self.list=Q.QListWidget();split.addWidget(self.list)
@@ -92,18 +92,22 @@ class Window(ProjectMixin,Q.QWidget):
         scroll=Q.QScrollArea();scroll.setWidgetResizable(True);scroll.setFrameShape(Q.QFrame.NoFrame)
         panel=Q.QWidget();sections=Q.QVBoxLayout(panel);scroll.setWidget(panel);right_layout.addWidget(scroll,1)
         groups={}
-        for key,title in [('music','Step 2 — Music playlist'),('timing','Step 3 — Timing'),('appearance','Step 4 — Picture and 3D'),('title','Step 5 — Opening title'),('export','Step 6 — Export and save')]:
+        for key,title in [('music','Step 2 — Music playlist'),('timing','Step 3 — Timing'),('appearance','Step 4 — Picture and 3D'),('title','Step 5 — Opening title'),('captions','Step 6 — Captions (optional)'),('export','Step 7 — Export and save')]:
             box=Q.QGroupBox(title);box.setStyleSheet('QGroupBox { font-weight:600; margin-top:10px; padding-top:12px; }');groups[key]=Q.QFormLayout(box);groups[key].setRowWrapPolicy(Q.QFormLayout.WrapLongRows);sections.addWidget(box)
         sections.addStretch();columns.setSizes([440,700])
         header=Q.QHBoxLayout();left_layout.addLayout(header);header.addStretch();expand=Q.QPushButton('+ Expand lists');expand.setToolTip('Open a nearly full-screen organizer for photos, videos and music');expand.clicked.connect(self.organize);header.addWidget(expand)
         self.files=Q.QListWidget(); self.files.setDragDropMode(Q.QAbstractItemView.InternalMove); self.files.setSelectionMode(Q.QAbstractItemView.ExtendedSelection); left_layout.addWidget(self.files,1)
         row=Q.QHBoxLayout(); left_layout.addLayout(row)
-        for label,func in [('Add files…',self.pick),('Remove selected',self.remove),('Clear list',self.files.clear),('Captions…',self.edit_captions)]:
+        for label,func in [('Add files…',self.pick),('Remove selected',self.remove),('Clear list',self.files.clear)]:
             b=Q.QPushButton(label); b.clicked.connect(func); row.addWidget(b)
         soundrow=Q.QHBoxLayout(); left_layout.addLayout(soundrow)
         hint=Q.QLabel('Checked videos play their original sound.');hint.setWordWrap(True);left_layout.addWidget(hint)
         for label,checked in [('Mute all clips',False),('Enable all clips',True)]:
             b=Q.QPushButton(label); b.clicked.connect(lambda _=False,c=checked:self.clip_sound(c)); soundrow.addWidget(b)
+        self.captions_enabled=Q.QCheckBox('Show captions in the video');self.captions_enabled.setChecked(saved.get('captions_enabled',False));groups['captions'].addRow(self.captions_enabled)
+        caption_note=Q.QLabel('Off means no captions. Your caption text is kept, so switching this back on restores it.');caption_note.setWordWrap(True);groups['captions'].addRow(caption_note)
+        for text,callback in [('Edit captions…',self.edit_captions),('Use photo / video names as captions…',self.caption_names)]:
+            button=Q.QPushButton(text);button.clicked.connect(callback);groups['captions'].addRow(button)
         self.audio='';self.music=Q.QLabel();self.music.setWordWrap(True);groups['music'].addRow(self.music)
         self.music_files=Q.QListWidget();self.music_files.setDragDropMode(Q.QAbstractItemView.InternalMove);self.music_files.setSelectionMode(Q.QAbstractItemView.ExtendedSelection);self.music_files.setFixedHeight(110);groups['music'].addRow(self.music_files)
         for path in saved.get('playlist',([saved['audio']] if saved.get('audio') else [])):self.music_files.addItem(audio_item(path))
@@ -173,6 +177,7 @@ class Window(ProjectMixin,Q.QWidget):
         from ui_controls import protect_settings_wheel
         protect_settings_wheel(self)
         self.setup_projects(file_menu)
+        self.captions_enabled.toggled.connect(self.project_changed)
         file_menu.addAction('Export editable timeline for DaVinci Resolve…',self.export_resolve)
         resolve_button=Q.QPushButton('Export editable timeline for DaVinci Resolve…');resolve_button.clicked.connect(self.export_resolve);groups['export'].addRow(resolve_button)
         file_menu.addSeparator();action=file_menu.addAction('Upload finished SBS video to YouTube…');action.triggered.connect(self.upload_youtube)
@@ -230,6 +235,13 @@ class Window(ProjectMixin,Q.QWidget):
         result=wizard.exec();wizard.cleanup()
         if result==Q.QDialog.Accepted:
             wizard.apply();self.project_changed();self.begin()
+    def caption_names(self):
+        if self.worker and self.worker.isRunning():return
+        if not self.files.count():return
+        if any(self.captions.values()) and Q.QMessageBox.question(self,'Replace caption text?','Replace captions for the listed items with their filenames?',Q.QMessageBox.Yes|Q.QMessageBox.No,Q.QMessageBox.No)!=Q.QMessageBox.Yes:return
+        for i in range(self.files.count()):
+            path=item_path(self.files.item(i));self.captions[path]=Path(path).stem
+        self.captions_enabled.setChecked(True);self.project_changed()
     def edit_captions(self):
         if self.worker and self.worker.isRunning():
             Q.QMessageBox.information(self,'Rendering','Wait for rendering to finish before editing captions.');return
@@ -237,11 +249,11 @@ class Window(ProjectMixin,Q.QWidget):
             Q.QMessageBox.information(self,'Add photos or videos','Add your photos and videos first, then open Captions.');return
         dialog=CaptionEditor([item_path(self.files.item(i)) for i in range(self.files.count())],self.captions,self.caption_front,self)
         if dialog.exec()==Q.QDialog.Accepted:
-            self.captions=dialog.captions;self.caption_front=dialog.front.isChecked()
+            self.captions=dialog.captions;self.caption_front=dialog.front.isChecked();self.captions_enabled.setChecked(True)
             # Save captions immediately, including when the user has not rendered yet.
             try:settings=json.loads(SETTINGS.read_text())
             except Exception:settings={}
-            settings.update(captions=self.captions,caption_front=self.caption_front)
+            settings.update(captions=self.captions,caption_front=self.caption_front,captions_enabled=self.captions_enabled.isChecked())
             SETTINGS.parent.mkdir(parents=True,exist_ok=True);SETTINGS.write_text(json.dumps(settings,indent=2));self.project_changed()
     def clip_sound(self,checked):
         if checked: self.video_sound.setChecked(True)
@@ -390,7 +402,7 @@ class Window(ProjectMixin,Q.QWidget):
         num,den=map(int,self.aspect.currentText().split(':')); eye_w=2*round(h*num/den/2); w=eye_w*2
         output=str(Path(item_path(self.files.item(0))).parent/'Stereo Slideshows') if self.source.isChecked() else self.out.text()
         self.actual_output=output
-        cfg=dict(playlist=self.playlist(),end_mode_index=self.end_mode.currentIndex(),end_mode='music' if self.end_mode.currentIndex()==1 else 'visuals',fit_music=self.fit_music.isChecked(),depth_layers=self.layers.isChecked(),layer_strength=self.layer_strength.currentIndex(),captions=self.captions,caption_front=self.caption_front,muted_videos=[item_path(self.files.item(i)) for i in range(self.files.count()) if Path(item_path(self.files.item(i))).suffix.lower() in VIDEO_EXT and self.files.item(i).checkState()==QtCore.Qt.Unchecked],closing_fade=self.closing.value(),video_half=self.video_half.isChecked(),video_cross=self.video_cross.isChecked(),video_sound=self.video_sound.isChecked(),motion_style=['Closer zoom and side drift','Gentle'][self.animation.currentIndex()],background_style_v6=self.backdrop.currentText(),eye_aspect=self.aspect.currentText(),background_style=self.backdrop.currentText(),drift=[0,.0015,.003][self.drift.currentIndex()],drift_choice_v4=self.drift.currentIndex(),width=w,height=h,fps=30,seconds=self.sec.value(),seconds_v3=self.manual_seconds if self.fit_music.isChecked() else self.sec.value(),pause=self.pause.value(),title_seconds=self.title_sec.value(),title=self.title.text(),title_motion=self.motion.currentText(),background=self.bg,text_color=self.fg,cross=self.cross.isChecked(),sbs=self.sbs.isChecked(),youtube=self.yt.isChecked(),youtube_v4=self.yt.isChecked(),source_output=self.source.isChecked(),anaglyph=self.ana.isChecked(),audio=self.audio,output=self.out.text(),resolution=self.res.currentIndex())
+        cfg=dict(playlist=self.playlist(),end_mode_index=self.end_mode.currentIndex(),end_mode='music' if self.end_mode.currentIndex()==1 else 'visuals',fit_music=self.fit_music.isChecked(),depth_layers=self.layers.isChecked(),layer_strength=self.layer_strength.currentIndex(),captions=self.captions,captions_enabled=self.captions_enabled.isChecked(),caption_front=self.caption_front,muted_videos=[item_path(self.files.item(i)) for i in range(self.files.count()) if Path(item_path(self.files.item(i))).suffix.lower() in VIDEO_EXT and self.files.item(i).checkState()==QtCore.Qt.Unchecked],closing_fade=self.closing.value(),video_half=self.video_half.isChecked(),video_cross=self.video_cross.isChecked(),video_sound=self.video_sound.isChecked(),motion_style=['Closer zoom and side drift','Gentle'][self.animation.currentIndex()],background_style_v6=self.backdrop.currentText(),eye_aspect=self.aspect.currentText(),background_style=self.backdrop.currentText(),drift=[0,.0015,.003][self.drift.currentIndex()],drift_choice_v4=self.drift.currentIndex(),width=w,height=h,fps=30,seconds=self.sec.value(),seconds_v3=self.manual_seconds if self.fit_music.isChecked() else self.sec.value(),pause=self.pause.value(),title_seconds=self.title_sec.value(),title=self.title.text(),title_motion=self.motion.currentText(),background=self.bg,text_color=self.fg,cross=self.cross.isChecked(),sbs=self.sbs.isChecked(),youtube=self.yt.isChecked(),youtube_v4=self.yt.isChecked(),source_output=self.source.isChecked(),anaglyph=self.ana.isChecked(),audio=self.audio,output=self.out.text(),resolution=self.res.currentIndex())
         if cfg['end_mode']=='music' or cfg['fit_music']:
             plan,message=self.preview_for([item_path(self.files.item(i)) for i in range(self.files.count())],self.playlist(),cfg)
             if plan is None:
